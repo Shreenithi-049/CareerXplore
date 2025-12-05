@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "career-recommendation-app",
+    "name": "Career Recommendation App",
     "slug": "career-recommendation-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -20,10 +20,20 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "permissions": [],
+      "package": "com.student.careerportal"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png",
+      "name": "Career Recommendation Portal",
+      "backgroundColor": "#ffffff",
+      "display": "standalone"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "career-recommendation-app"
+      }
     }
   }
 }

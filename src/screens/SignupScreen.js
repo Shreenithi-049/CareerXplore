@@ -1,0 +1,113 @@
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import colors from "../theme/colors";
+import InputField from "../components/InputField";
+import Button from "../components/Button";
+import { auth, db } from "../services/firebaseConfig";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { ref, set } from "firebase/database";
+
+export default function SignupScreen({ navigation }) {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSignup = () => {
+    if (!fullName || !email || !password) {
+      alert("All fields are required!");
+      return;
+    }
+
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((res) => {
+        set(ref(db, "users/" + res.user.uid), {
+          fullName,
+          email,
+        });
+        navigation.replace("ProfileSetup");
+      })
+      .catch((err) => alert(err.message));
+  };
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
+      <Text style={styles.title}>Create Account</Text>
+
+      <View style={styles.card}>
+        <InputField
+          placeholder="Full Name"
+          value={fullName}
+          onChangeText={setFullName}
+        />
+
+        <InputField
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+        />
+
+        <InputField
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+
+        <Button title="Sign Up" onPress={handleSignup} />
+
+        <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+          <Text style={styles.linkText}>
+            Already have an account?{" "}
+            <Text style={styles.linkStrong}>Login</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: colors.primary,
+    marginBottom: 20,
+  },
+  card: {
+    width: "100%",
+    padding: 20,
+    backgroundColor: "#FAFAFA",
+    borderRadius: 20,
+    elevation: 6,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    alignItems: "center",
+  },
+  linkText: {
+    color: colors.textLight,
+    marginTop: 15,
+  },
+  linkStrong: {
+    color: colors.primary,
+    fontWeight: "600",
+  },
+});
