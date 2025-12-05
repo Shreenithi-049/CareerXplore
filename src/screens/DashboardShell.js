@@ -14,8 +14,9 @@ export default function DashboardShell({ navigation }) {
   const renderContent = () => {
     const commonProps = {
       navigation,
-      showHamburger: activePage === "Dashboard",
-      onToggleSidebar: () => setSidebarVisible(!sidebarVisible)
+      showHamburger: activePage === "Dashboard" && !sidebarVisible,
+      onToggleSidebar: () => setSidebarVisible(!sidebarVisible),
+      setActivePage
     };
 
     switch (activePage) {

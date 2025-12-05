@@ -12,6 +12,8 @@ import colors from "../theme/colors";
 import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue } from "firebase/database";
 import ScreenHeader from "../components/ScreenHeader";
+import ProfileNotification from "../components/ProfileNotification";
+import { isProfileComplete } from "../utils/profileUtils";
 
 const isWeb = Platform.OS === "web";
 
@@ -24,150 +26,144 @@ const CAREERS = [
     requiredSkills: ["Python", "Java", "C++", "Web Development"],
     tags: ["#Tech", "#Software", "#FullStack"],
     salary: "₹4L – ₹12L per year (entry to mid level)",
-    description:
-      "Software Developers build and maintain applications for web, desktop, or mobile platforms.",
-    roles: [
-      "Design, code, and test software applications",
-      "Fix bugs and improve performance",
-      "Collaborate with designers, testers, and product teams",
-    ],
-    futureScope:
-      "Very high demand with opportunities in product companies, startups, and service industries.",
-    learningPath: [
-      "Strengthen Data Structures & Algorithms",
-      "Practice building full-stack projects",
-      "Learn version control (Git) and basic DevOps concepts",
-    ],
+    description: "Software Developers build and maintain applications for web, desktop, or mobile platforms.",
+    roles: ["Design, code, and test software applications", "Fix bugs and improve performance", "Collaborate with designers, testers, and product teams"],
+    futureScope: "Very high demand with opportunities in product companies, startups, and service industries.",
+    learningPath: ["Strengthen Data Structures & Algorithms", "Practice building full-stack projects", "Learn version control (Git) and basic DevOps concepts"],
   },
   {
     id: 2,
-    title: "Frontend Developer",
-    category: "Frontend / Web",
-    requiredSkills: ["Web Development", "UI/UX Design"],
-    tags: ["#Web", "#Frontend", "#UI"],
-    salary: "₹3.5L – ₹10L per year",
-    description:
-      "Frontend Developers build the user-facing part of websites and web apps.",
-    roles: [
-      "Convert UI/UX designs into responsive web pages",
-      "Optimize site performance and accessibility",
-      "Work closely with designers and backend developers",
-    ],
-    futureScope:
-      "High demand in product and service companies, freelancing opportunities are strong.",
-    learningPath: [
-      "Master HTML, CSS, JavaScript",
-      "Learn a framework like React",
-      "Understand UI/UX basics and responsive design",
-    ],
+    title: "Data Scientist",
+    category: "Data & Analytics",
+    requiredSkills: ["Data Analysis", "Python", "Machine Learning", "SQL / Databases"],
+    tags: ["#Data", "#AI", "#ML"],
+    salary: "₹6L – ₹15L per year",
+    description: "Data Scientists extract insights from complex data using statistical methods and machine learning.",
+    roles: ["Build predictive models", "Analyze large datasets", "Present findings to stakeholders"],
+    futureScope: "Extremely high demand across all industries with AI/ML growth.",
+    learningPath: ["Master Python and R", "Learn statistics and ML algorithms", "Practice with real datasets"],
   },
   {
     id: 3,
-    title: "Data Analyst",
-    category: "Data & Analytics",
-    requiredSkills: ["Data Analysis", "Excel & Analytics", "SQL / Databases"],
-    tags: ["#Data", "#Analytics", "#Excel"],
-    salary: "₹4L – ₹9L per year",
-    description:
-      "Data Analysts interpret data and turn it into meaningful insights for decision making.",
-    roles: [
-      "Collect, clean, and analyze structured data",
-      "Prepare reports and dashboards",
-      "Support business teams with data-driven insights",
-    ],
-    futureScope:
-      "Excellent growth with the rise of data-driven decisions in all industries.",
-    learningPath: [
-      "Learn Excel, SQL, and basic statistics",
-      "Practice with visualization tools (Power BI / Tableau)",
-      "Understand business KPIs and real datasets",
-    ],
+    title: "Digital Marketing Specialist",
+    category: "Marketing",
+    requiredSkills: ["Digital Marketing", "Content Creation", "Social Media"],
+    tags: ["#Marketing", "#Digital", "#Social"],
+    salary: "₹3L – ₹8L per year",
+    description: "Digital Marketing Specialists create and manage online marketing campaigns.",
+    roles: ["Manage social media campaigns", "Create content strategies", "Analyze marketing metrics"],
+    futureScope: "Growing rapidly with digital transformation of businesses.",
+    learningPath: ["Learn Google Ads and Analytics", "Master social media platforms", "Understand SEO/SEM"],
   },
   {
     id: 4,
-    title: "Cyber Security Analyst",
-    category: "Networking / Security",
-    requiredSkills: ["Cyber Security", "Networking"],
-    tags: ["#Security", "#Networking", "#EthicalHacking"],
+    title: "Financial Analyst",
+    category: "Finance",
+    requiredSkills: ["Finance", "Excel & Analytics", "Accounting"],
+    tags: ["#Finance", "#Analysis", "#Investment"],
     salary: "₹4L – ₹10L per year",
-    description:
-      "Cyber Security Analysts protect systems and networks from digital attacks.",
-    roles: [
-      "Monitor systems for suspicious activities",
-      "Conduct vulnerability assessments",
-      "Help implement security policies and best practices",
-    ],
-    futureScope:
-      "Rapidly growing field due to increase in cyber threats across the world.",
-    learningPath: [
-      "Learn networking fundamentals",
-      "Study security concepts, tools, and common attacks",
-      "Get hands-on with labs and certifications (CEH, Security+)",
-    ],
+    description: "Financial Analysts evaluate investment opportunities and financial performance.",
+    roles: ["Analyze financial data", "Create financial models", "Prepare investment reports"],
+    futureScope: "Stable demand in banking, investment, and corporate sectors.",
+    learningPath: ["Master Excel and financial modeling", "Learn accounting principles", "Understand market analysis"],
   },
   {
     id: 5,
-    title: "Cloud Engineer (Junior)",
-    category: "Cloud",
-    requiredSkills: ["Cloud Computing", "Networking"],
-    tags: ["#Cloud", "#AWS", "#Azure"],
-    salary: "₹4L – ₹11L per year",
-    description:
-      "Cloud Engineers design and manage cloud-based infrastructure and services.",
-    roles: [
-      "Deploy and maintain applications on cloud platforms",
-      "Monitor performance and optimize costs",
-      "Work with DevOps and development teams",
-    ],
-    futureScope:
-      "Strong future as most companies are migrating to cloud quickly.",
-    learningPath: [
-      "Learn basics of AWS / Azure / GCP",
-      "Understand Linux, networking, and containers",
-      "Get a cloud associate level certification",
-    ],
+    title: "Mechanical Engineer",
+    category: "Engineering",
+    requiredSkills: ["Mechanical Engineering", "CAD Design", "Manufacturing"],
+    tags: ["#Engineering", "#Design", "#Manufacturing"],
+    salary: "₹3.5L – ₹9L per year",
+    description: "Mechanical Engineers design and develop mechanical systems and products.",
+    roles: ["Design mechanical components", "Oversee manufacturing processes", "Test and improve products"],
+    futureScope: "Consistent demand in automotive, aerospace, and manufacturing industries.",
+    learningPath: ["Master CAD software", "Learn manufacturing processes", "Understand materials science"],
   },
   {
     id: 6,
-    title: "UI/UX Designer",
+    title: "Content Writer",
+    category: "Content & Media",
+    requiredSkills: ["Content Creation", "Writing", "SEO"],
+    tags: ["#Writing", "#Content", "#SEO"],
+    salary: "₹2.5L – ₹6L per year",
+    description: "Content Writers create engaging written content for websites, blogs, and marketing materials.",
+    roles: ["Write blog posts and articles", "Create marketing copy", "Optimize content for SEO"],
+    futureScope: "High demand with growth of digital content and online businesses.",
+    learningPath: ["Improve writing skills", "Learn SEO basics", "Build a content portfolio"],
+  },
+  {
+    id: 7,
+    title: "Graphic Designer",
     category: "Design",
-    requiredSkills: ["UI/UX Design", "Graphic Design"],
-    tags: ["#Design", "#UIUX", "#Creative"],
-    salary: "₹3L – ₹9L per year",
-    description:
-      "UI/UX Designers design interfaces and user journeys that are simple and delightful.",
-    roles: [
-      "Create wireframes, mockups, and prototypes",
-      "Conduct user research and usability testing",
-      "Collaborate with developers to implement designs",
-    ],
-    futureScope:
-      "In demand for all digital products – apps, websites, and SaaS platforms.",
-    learningPath: [
-      "Learn design fundamentals (layout, color, typography)",
-      "Practice with tools like Figma",
-      "Study UX processes and build a strong portfolio",
-    ],
+    requiredSkills: ["Graphic Design", "UI/UX Design", "Creative Arts"],
+    tags: ["#Design", "#Creative", "#Visual"],
+    salary: "₹2.5L – ₹7L per year",
+    description: "Graphic Designers create visual content for print and digital media.",
+    roles: ["Design logos and branding", "Create marketing materials", "Develop visual concepts"],
+    futureScope: "Steady demand across advertising, media, and digital industries.",
+    learningPath: ["Master design software (Photoshop, Illustrator)", "Study design principles", "Build a strong portfolio"],
+  },
+  {
+    id: 8,
+    title: "Human Resources Specialist",
+    category: "Human Resources",
+    requiredSkills: ["Human Resources", "Communication", "Psychology"],
+    tags: ["#HR", "#People", "#Management"],
+    salary: "₹3L – ₹8L per year",
+    description: "HR Specialists manage employee relations, recruitment, and organizational development.",
+    roles: ["Recruit and hire employees", "Manage employee relations", "Develop HR policies"],
+    futureScope: "Essential role in all organizations with focus on employee experience.",
+    learningPath: ["Learn HR best practices", "Understand employment law", "Develop interpersonal skills"],
+  },
+  {
+    id: 9,
+    title: "Sales Representative",
+    category: "Sales",
+    requiredSkills: ["Sales", "Communication", "Customer Service"],
+    tags: ["#Sales", "#Business", "#Customer"],
+    salary: "₹3L – ₹10L per year (with incentives)",
+    description: "Sales Representatives sell products or services to customers and build client relationships.",
+    roles: ["Generate leads and prospects", "Present products to clients", "Close sales deals"],
+    futureScope: "Always in demand across all industries with good earning potential.",
+    learningPath: ["Develop communication skills", "Learn sales techniques", "Understand customer psychology"],
+  },
+  {
+    id: 10,
+    title: "Project Manager",
+    category: "Management",
+    requiredSkills: ["Project Management", "Leadership", "Communication"],
+    tags: ["#Management", "#Leadership", "#Planning"],
+    salary: "₹5L – ₹12L per year",
+    description: "Project Managers plan, execute, and oversee projects from initiation to completion.",
+    roles: ["Plan project timelines", "Coordinate team activities", "Manage project budgets"],
+    futureScope: "High demand across all industries as organizations focus on efficient project delivery.",
+    learningPath: ["Learn project management methodologies", "Develop leadership skills", "Get PMP certification"],
   },
 ];
 
 const CATEGORIES = [
   "All",
   "Software Development",
-  "Frontend / Web",
   "Data & Analytics",
-  "Networking / Security",
-  "Cloud",
+  "Marketing",
+  "Finance",
+  "Engineering",
+  "Content & Media",
   "Design",
+  "Human Resources",
+  "Sales",
+  "Management",
 ];
 
-export default function CareerRecommendationScreen({ navigation }) {
+export default function CareerRecommendationScreen({ navigation, setActivePage }) {
   const [userSkills, setUserSkills] = useState([]);
+  const [userInterests, setUserInterests] = useState([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [hoveredId, setHoveredId] = useState(null);
+  const [profileComplete, setProfileComplete] = useState(false);
 
-  // Load user skills from Firebase
+  // Load user profile data from Firebase
   useEffect(() => {
     const user = auth.currentUser;
     if (!user) return;
@@ -175,12 +171,25 @@ export default function CareerRecommendationScreen({ navigation }) {
     const userRef = ref(db, "users/" + user.uid);
     onValue(userRef, (snapshot) => {
       const data = snapshot.val();
+      
+      // Update skills
       if (data?.skills) {
         const arr = Array.isArray(data.skills) ? data.skills : [data.skills];
         setUserSkills(arr.map((s) => s.toLowerCase()));
       } else {
         setUserSkills([]);
       }
+      
+      // Update interests
+      if (data?.interests) {
+        const arr = Array.isArray(data.interests) ? data.interests : [data.interests];
+        setUserInterests(arr.map((i) => i.toLowerCase()));
+      } else {
+        setUserInterests([]);
+      }
+      
+      // Check if profile is complete
+      setProfileComplete(isProfileComplete(data));
     });
   }, []);
 
@@ -190,23 +199,34 @@ export default function CareerRecommendationScreen({ navigation }) {
 
     const scored = CAREERS.map((career) => {
       const required = career.requiredSkills.map((s) => s.toLowerCase());
-      const matched = required.filter((s) => userSkills.includes(s));
-      const matchCount = matched.length;
-      const matchRatio = required.length
-        ? matchCount / required.length
-        : 0;
+      const skillMatched = required.filter((s) => userSkills.includes(s));
+      const skillMatchCount = skillMatched.length;
+      const skillMatchRatio = required.length ? skillMatchCount / required.length : 0;
+      
+      // Bonus scoring for interests alignment (if available)
+      let interestBonus = 0;
+      if (userInterests.length > 0) {
+        const careerKeywords = [...career.title.toLowerCase().split(' '), ...career.category.toLowerCase().split(' ')];
+        const interestMatch = userInterests.some(interest => 
+          careerKeywords.some(keyword => keyword.includes(interest) || interest.includes(keyword))
+        );
+        interestBonus = interestMatch ? 0.2 : 0;
+      }
+      
+      const totalMatchRatio = skillMatchRatio + interestBonus;
+      
       return {
         ...career,
-        matchCount,
-        matchRatio,
-        matchedSkills: matched,
+        matchCount: skillMatchCount,
+        matchRatio: totalMatchRatio,
+        matchedSkills: skillMatched,
       };
     })
       .filter((c) => c.matchCount > 0) // only careers with at least 1 matched skill
-      .sort((a, b) => b.matchCount - a.matchCount);
+      .sort((a, b) => b.matchRatio - a.matchRatio);
 
     return scored;
-  }, [userSkills]);
+  }, [userSkills, userInterests]);
 
   // Apply category + search filters
   const filteredCareers = useMemo(() => {
@@ -232,6 +252,9 @@ export default function CareerRecommendationScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <ScreenHeader title="Career Recommendations" subtitle="Discover careers that match your skills" />
+      {!profileComplete && (
+        <ProfileNotification onNavigateToProfile={() => setActivePage && setActivePage('Profile')} />
+      )}
       {/* Search */}
       <View style={styles.searchWrapper}>
         <TextInput

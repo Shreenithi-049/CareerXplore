@@ -1,9 +1,9 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../theme/colors";
 
-export default function ScreenHeader({ title, subtitle, showHamburger, onToggleSidebar }) {
+export default function ScreenHeader({ title, subtitle, showHamburger, onToggleSidebar, showLogo = false }) {
   return (
     <View style={styles.header}>
       <View style={styles.headerContent}>
@@ -11,6 +11,13 @@ export default function ScreenHeader({ title, subtitle, showHamburger, onToggleS
           <TouchableOpacity style={styles.hamburger} onPress={onToggleSidebar}>
             <MaterialIcons name="menu" size={24} color={colors.white} />
           </TouchableOpacity>
+        )}
+        {showLogo && (
+          <Image 
+            source={require('../../assets/CareerXplore_logo_alone.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
         )}
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{title}</Text>
@@ -36,17 +43,22 @@ const styles = StyleSheet.create({
   hamburger: {
     marginRight: 16,
   },
+  headerLogo: {
+    width: 100,
+    height: 100,
+    marginRight: 12,
+  },
   titleContainer: {
     flex: 1,
   },
   title: {
     fontSize: 24,
     fontWeight: "700",
-    color: colors.white,
+    color: colors.accent,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    color: "#E5E7EB",
+    color: "#F5F1E8",
   },
 });

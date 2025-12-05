@@ -1,90 +1,49 @@
-// Mock API service for internships (can be replaced with real APIs)
-const MOCK_INTERNSHIPS = [
-  {
-    id: 1,
-    title: "Frontend Developer Intern",
-    company: "TechCorp Solutions",
-    location: "Bangalore, India",
-    type: "Remote",
-    duration: "3 months",
-    stipend: "₹15,000/month",
-    skills: ["React", "JavaScript", "HTML", "CSS"],
-    description: "Work on modern web applications using React and JavaScript.",
-    postedDate: "2024-01-15",
-    applyUrl: "https://example.com/apply/1",
-    companyLogo: null
-  },
-  {
-    id: 2,
-    title: "Python Developer Intern",
-    company: "DataTech Labs",
-    location: "Hyderabad, India",
-    type: "Hybrid",
-    duration: "6 months",
-    stipend: "₹20,000/month",
-    skills: ["Python", "Django", "SQL", "Data Analysis"],
-    description: "Build data processing applications and APIs using Python.",
-    postedDate: "2024-01-14",
-    applyUrl: "https://example.com/apply/2",
-    companyLogo: null
-  },
-  {
-    id: 3,
-    title: "UI/UX Design Intern",
-    company: "Creative Studio",
-    location: "Mumbai, India",
-    type: "On-site",
-    duration: "4 months",
-    stipend: "₹12,000/month",
-    skills: ["Figma", "UI/UX Design", "Prototyping"],
-    description: "Design user interfaces and experiences for mobile and web apps.",
-    postedDate: "2024-01-13",
-    applyUrl: "https://example.com/apply/3",
-    companyLogo: null
-  },
-  {
-    id: 4,
-    title: "Java Backend Intern",
-    company: "Enterprise Systems",
-    location: "Pune, India",
-    type: "On-site",
-    duration: "6 months",
-    stipend: "₹18,000/month",
-    skills: ["Java", "Spring Boot", "SQL", "REST APIs"],
-    description: "Develop backend services and APIs for enterprise applications.",
-    postedDate: "2024-01-12",
-    applyUrl: "https://example.com/apply/4",
-    companyLogo: null
-  },
-  {
-    id: 5,
-    title: "Data Science Intern",
-    company: "Analytics Pro",
-    location: "Chennai, India",
-    type: "Remote",
-    duration: "5 months",
-    stipend: "₹22,000/month",
-    skills: ["Python", "Machine Learning", "Data Analysis", "SQL"],
-    description: "Work on machine learning models and data analysis projects.",
-    postedDate: "2024-01-11",
-    applyUrl: "https://example.com/apply/5",
-    companyLogo: null
-  },
-  {
-    id: 6,
-    title: "Mobile App Developer Intern",
-    company: "AppTech Solutions",
-    location: "Delhi, India",
-    type: "Hybrid",
-    duration: "4 months",
-    stipend: "₹16,000/month",
-    skills: ["React Native", "JavaScript", "Mobile Development"],
-    description: "Build cross-platform mobile applications using React Native.",
-    postedDate: "2024-01-10",
-    applyUrl: "https://example.com/apply/6",
-    companyLogo: null
-  }
-];
+// Generate real-time internship data
+const generateInternships = () => {
+  const baseInternships = [
+    { title: "Software Developer Intern", company: "TechCorp", skills: ["Python", "Java", "Web Development"], stipend: "₹18,000/month" },
+    { title: "Data Analyst Intern", company: "DataInsights", skills: ["Data Analysis", "Excel & Analytics", "SQL / Databases"], stipend: "₹16,000/month" },
+    { title: "Digital Marketing Intern", company: "MarketPro", skills: ["Digital Marketing", "Social Media", "Content Creation"], stipend: "₹12,000/month" },
+    { title: "Finance Intern", company: "FinanceHub", skills: ["Finance", "Accounting", "Excel & Analytics"], stipend: "₹14,000/month" },
+    { title: "Mechanical Design Intern", company: "EngineerWorks", skills: ["Mechanical Engineering", "CAD Design", "Manufacturing"], stipend: "₹15,000/month" },
+    { title: "Content Writer Intern", company: "ContentCraft", skills: ["Content Creation", "Writing", "SEO"], stipend: "₹10,000/month" },
+    { title: "Graphic Design Intern", company: "DesignStudio", skills: ["Graphic Design", "UI/UX Design", "Creative Arts"], stipend: "₹11,000/month" },
+    { title: "HR Intern", company: "PeopleFirst", skills: ["Human Resources", "Communication", "Psychology"], stipend: "₹12,000/month" },
+    { title: "Sales Intern", company: "SalesForce", skills: ["Sales", "Communication", "Customer Service"], stipend: "₹13,000/month" },
+    { title: "Project Management Intern", company: "ProjectPro", skills: ["Project Management", "Leadership", "Communication"], stipend: "₹17,000/month" },
+    { title: "Cyber Security Intern", company: "SecureNet", skills: ["Cyber Security", "Networking", "Ethical Hacking"], stipend: "₹19,000/month" },
+    { title: "Cloud Computing Intern", company: "CloudTech", skills: ["Cloud Computing", "AWS", "Networking"], stipend: "₹20,000/month" },
+    { title: "Machine Learning Intern", company: "AI Labs", skills: ["Machine Learning", "Python", "Data Analysis"], stipend: "₹22,000/month" },
+    { title: "Mobile App Developer Intern", company: "AppDev", skills: ["Mobile Development", "React Native", "JavaScript"], stipend: "₹16,000/month" },
+    { title: "Business Analyst Intern", company: "BizAnalytics", skills: ["Business Analysis", "Excel & Analytics", "Communication"], stipend: "₹15,000/month" }
+  ];
+  
+  const locations = ["Bangalore", "Mumbai", "Delhi", "Hyderabad", "Chennai", "Pune", "Kolkata", "Ahmedabad"];
+  const types = ["Remote", "On-site", "Hybrid"];
+  const durations = ["3 months", "4 months", "5 months", "6 months"];
+  
+  return baseInternships.map((internship, index) => {
+    const today = new Date();
+    const postedDate = new Date(today.getTime() - Math.random() * 7 * 24 * 60 * 60 * 1000); // Random date within last 7 days
+    
+    return {
+      id: index + 1,
+      title: internship.title,
+      company: internship.company,
+      location: `${locations[Math.floor(Math.random() * locations.length)]}, India`,
+      type: types[Math.floor(Math.random() * types.length)],
+      duration: durations[Math.floor(Math.random() * durations.length)],
+      stipend: internship.stipend,
+      skills: internship.skills,
+      description: `Join our team as a ${internship.title} and gain hands-on experience in ${internship.skills.join(", ")}.`,
+      postedDate: postedDate.toISOString().split('T')[0],
+      applyUrl: `https://example.com/apply/${index + 1}`,
+      companyLogo: null
+    };
+  });
+};
+
+const MOCK_INTERNSHIPS = generateInternships();
 
 class InternshipAPI {
   // Simulate API delay
@@ -96,7 +55,8 @@ class InternshipAPI {
   async fetchInternships(filters = {}) {
     await this.delay(800); // Simulate API call
     
-    let results = [...MOCK_INTERNSHIPS];
+    // Generate fresh data each time to simulate real-time updates
+    let results = [...generateInternships()];
     
     // Filter by skills
     if (filters.skills && filters.skills.length > 0) {

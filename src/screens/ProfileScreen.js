@@ -6,22 +6,33 @@ import {
   Alert,
   View,
   TouchableOpacity,
+  Image,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import * as ImagePicker from 'expo-image-picker';
 import colors from "../theme/colors";
 import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue, update } from "firebase/database";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
 import SkillSelector from "../components/SkillSelector";
+import InterestSelector from "../components/InterestSelector";
+import ResumeUploader from "../components/ResumeUploader";
 import ScreenHeader from "../components/ScreenHeader";
+import { isProfileComplete } from "../utils/profileUtils";
+import { forceProfileComplete } from "../utils/forceProfileComplete";
 
 export default function ProfileScreen() {
   const [fullName, setFullName] = useState("");
   const [education, setEducation] = useState("");
   const [skills, setSkills] = useState([]);
+  const [interests, setInterests] = useState([]);
+  const [resume, setResume] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [originalData, setOriginalData] = useState({});
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [showResumeUpload, setShowResumeUpload] = useState(false);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -34,11 +45,17 @@ export default function ProfileScreen() {
         const userData = {
           fullName: data.fullName || "",
           education: data.education || "",
-          skills: Array.isArray(data.skills) ? data.skills : data.skills ? [data.skills] : []
+          skills: Array.isArray(data.skills) ? data.skills : data.skills ? [data.skills] : [],
+          interests: Array.isArray(data.interests) ? data.interests : data.interests ? [data.interests] : [],
+          resume: data.resume || null,
+          profileImage: data.profileImage || null
         };
         setFullName(userData.fullName);
         setEducation(userData.education);
         setSkills(userData.skills);
+        setInterests(userData.interests);
+        setResume(userData.resume);
+        setProfileImage(userData.profileImage);
         setOriginalData(userData);
       }
     });
@@ -54,7 +71,92 @@ export default function ProfileScreen() {
     setFullName(originalData.fullName);
     setEducation(originalData.education);
     setSkills(originalData.skills);
+    setInterests(originalData.interests);
+    setResume(originalData.resume);
+    setProfileImage(originalData.profileImage);
     setIsEditing(false);
+  };
+
+  const pickImage = () => {
+    console.log('pickImage called, isEditing:', isEditing);
+    setShowImagePicker(true);
+  };
+
+  const openCamera = async () => {
+    try {
+      console.log('Opening camera...');
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      console.log('Camera permission status:', status);
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant camera permissions to take photos.');
+        return;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      console.log('Camera result:', result);
+      
+      if (!result.canceled && result.assets && result.assets[0]) {
+        console.log('Setting image URI:', result.assets[0].uri);
+        setProfileImage(result.assets[0].uri);
+        Alert.alert('Success', 'Photo captured successfully!');
+      }
+    } catch (error) {
+      console.log('Camera error:', error);
+      Alert.alert('Error', 'Failed to open camera: ' + error.message);
+    }
+  };
+
+  const openGallery = async () => {
+    try {
+      console.log('Opening gallery...');
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      console.log('Gallery permission status:', status);
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Please grant gallery permissions to select photos.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      console.log('Gallery result:', result);
+      
+      if (!result.canceled && result.assets && result.assets[0]) {
+        console.log('Setting image URI:', result.assets[0].uri);
+        setProfileImage(result.assets[0].uri);
+        Alert.alert('Success', 'Image selected successfully!');
+      }
+    } catch (error) {
+      console.log('Gallery error:', error);
+      Alert.alert('Error', 'Failed to open gallery: ' + error.message);
+    }
+  };
+
+  const removeImage = () => {
+    setProfileImage(null);
+  };
+
+  const triggerReRecommendations = () => {
+    // Trigger a refresh of career recommendations and internships
+    // by updating a timestamp that other screens can listen to
+    const user = auth.currentUser;
+    if (user) {
+      update(ref(db, "users/" + user.uid), {
+        profileUpdatedAt: new Date().toISOString(),
+      }).catch(err => console.log('Error updating profile timestamp:', err));
+    }
+    console.log('Triggering re-recommendations with updated profile data');
   };
 
   const handleSave = () => {
@@ -64,31 +166,117 @@ export default function ProfileScreen() {
       return;
     }
 
+    const profileData = { fullName, education, skills, interests };
+    const profileCompleteStatus = isProfileComplete(profileData);
+    
     update(ref(db, "users/" + user.uid), {
       fullName,
       education,
       skills,
+      interests,
+      resume,
+      profileImage,
+      lastUpdated: new Date().toISOString(),
+      profileComplete: profileCompleteStatus,
     })
       .then(() => {
-        Alert.alert("Success", "Profile updated successfully");
+        const message = profileCompleteStatus 
+          ? "Profile updated successfully! Career recommendations and internships will be refreshed."
+          : "Profile updated successfully!";
+        Alert.alert("Success", message);
         setIsEditing(false);
+        if (profileCompleteStatus) {
+          triggerReRecommendations();
+          // Force immediate update of profileComplete flag
+          update(ref(db, "users/" + user.uid), {
+            profileComplete: true
+          }).catch(err => console.log('Error updating profileComplete flag:', err));
+        }
       })
       .catch((err) => Alert.alert("Error", err.message));
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.headerContainer}>
-        <ScreenHeader title="Profile" subtitle="Manage your personal information and skills" />
+    <View style={styles.container}>
+      <ScreenHeader title="Profile" subtitle="Manage your personal information and skills" />
+      
+      <View style={styles.profileContent}>
         {!isEditing && (
           <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
             <MaterialIcons name="edit" size={20} color={colors.white} />
             <Text style={styles.editButtonText}>Edit</Text>
           </TouchableOpacity>
         )}
-      </View>
+        
+        <ScrollView style={styles.scrollContent}>
+        {/* Image Picker Modal */}
+        {showImagePicker && (
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Select Profile Picture</Text>
+              <TouchableOpacity 
+                style={styles.modalButton}
+                onPress={() => {
+                  setShowImagePicker(false);
+                  openGallery();
+                }}
+              >
+                <Text style={styles.modalButtonText}>Gallery</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.modalButton}
+                onPress={() => {
+                  setShowImagePicker(false);
+                  setProfileImage('default');
+                }}
+              >
+                <Text style={styles.modalButtonText}>Use Default Avatar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => setShowImagePicker(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+        
+        {/* Profile Picture Section */}
+        <View style={styles.profileImageSection}>
+         
+          <View style={styles.imageContainer}>
+            {profileImage ? (
+              <View style={styles.imageWrapper}>
+                {profileImage === 'default' ? (
+                  <Image source={require('../../assets/profile.png')} style={styles.profileImagePreview} />
+                ) : (
+                  <Image source={{ uri: profileImage }} style={styles.profileImagePreview} />
+                )}
+                {isEditing && (
+                  <View style={styles.imageActions}>
+                    <TouchableOpacity style={styles.imageActionButton} onPress={pickImage}>
+                      <MaterialIcons name="edit" size={16} color={colors.white} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.imageActionButton} onPress={removeImage}>
+                      <MaterialIcons name="delete" size={16} color={colors.white} />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <TouchableOpacity 
+                style={styles.imagePlaceholder} 
+                onPress={pickImage}
+                activeOpacity={0.7}
+              >
+                <MaterialIcons name="person" size={40} color={colors.textLight} />
+                {isEditing && <Text style={styles.uploadText}>Tap to upload</Text>}
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
 
-      <View style={styles.profileContent}>
         <Text style={styles.label}>Full Name</Text>
         <InputField 
           value={fullName} 
@@ -112,6 +300,22 @@ export default function ProfileScreen() {
           disabled={!isEditing}
         />
 
+        <Text style={styles.label}>Interests</Text>
+        <InterestSelector 
+          selectedInterests={interests} 
+          onChange={setInterests} 
+          disabled={!isEditing}
+        />
+
+        <Text style={styles.label}>Resume</Text>
+        <ResumeUploader 
+          resume={resume}
+          onUpload={setResume}
+          disabled={!isEditing}
+        />
+        
+
+
         {isEditing && (
           <View style={styles.buttonContainer}>
             <Button 
@@ -127,28 +331,33 @@ export default function ProfileScreen() {
             />
           </View>
         )}
+        </ScrollView>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingBottom: 40,
+    flex: 1,
+    paddingTop: 20,
   },
-  headerContainer: {
+  profileContent: {
+    flex: 1,
+    padding: 20,
     position: "relative",
   },
   editButton: {
     position: "absolute",
-    top: 16,
-    right: 20,
+    top: 0,
+    right: 0,
     backgroundColor: colors.accent,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
+    zIndex: 10,
   },
   editButtonText: {
     color: colors.white,
@@ -156,8 +365,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginLeft: 4,
   },
-  profileContent: {
-    padding: 20,
+  scrollContent: {
+    flex: 1,
+    paddingTop: 50,
   },
   label: {
     fontSize: 14,
@@ -188,5 +398,90 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: colors.textDark,
+  },
+  profileImageSection: {
+    alignItems: "flex-start",
+    marginBottom: 20,
+  },
+  imageContainer: {
+    alignItems: "flex-start",
+  },
+  imageWrapper: {
+    position: "relative",
+  },
+  profileImagePreview: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: colors.accent,
+  },
+  imageActions: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    flexDirection: "row",
+    gap: 8,
+  },
+  imageActionButton: {
+    backgroundColor: colors.accent,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imagePlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.grayLight,
+    borderWidth: 2,
+    borderColor: colors.grayBorder,
+    borderStyle: "dashed",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  uploadText: {
+    fontSize: 12,
+    color: colors.textLight,
+    marginTop: 4,
+    textAlign: "center",
+  },
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 20,
+    width: "80%",
+    maxWidth: 300,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.primary,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  modalButton: {
+    backgroundColor: colors.accent,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  modalButtonText: {
+    color: colors.white,
+    fontWeight: "600",
   },
 });

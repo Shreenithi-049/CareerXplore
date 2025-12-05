@@ -4,7 +4,6 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import LoginScreen from "../screens/LoginScreen";
 import SignupScreen from "../screens/SignupScreen";
-import ProfileSetupScreen from "../screens/ProfileSetupScreen";
 import DashboardShell from "../screens/DashboardShell";
 import CareerDetailsScreen from "../screens/CareerDetailsScreen";
 import InternshipDetailsScreen from "../screens/InternshipDetailsScreen";
@@ -20,19 +19,12 @@ const Stack = createNativeStackNavigator();
 export default function AppNavigator() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [profileCompleted, setProfileCompleted] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (loggedUser) => {
       setUser(loggedUser);
 
-      if (loggedUser) {
-        const userRef = ref(db, "users/" + loggedUser.uid);
-        onValue(userRef, (snapshot) => {
-          const data = snapshot.val();
-          setProfileCompleted(!!(data?.education && data?.skills));
-        });
-      }
+
       setLoading(false);
     });
 
@@ -55,8 +47,6 @@ export default function AppNavigator() {
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
           </>
-        ) : !profileCompleted ? (
-          <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
         ) : (
           <>
             <Stack.Screen name="Dashboard" component={DashboardShell} />

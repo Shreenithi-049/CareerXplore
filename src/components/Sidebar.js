@@ -1,7 +1,8 @@
 // src/components/Sidebar.js
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { auth } from "../services/firebaseConfig";
 import colors from "../theme/colors";
 
 export default function Sidebar({ activePage, setActivePage, navigation, onClose }) {
@@ -19,18 +20,25 @@ export default function Sidebar({ activePage, setActivePage, navigation, onClose
     }
   };
 
-  const handleLogout = () => {
-    navigation.navigate("Login");
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      navigation.navigate("Login");
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
     <View style={styles.sidebar}>
       {/* Logo / Branding */}
       <View style={styles.logoContainer}>
-        <View style={styles.logoBadge}>
-          <Text style={styles.logoText}>CR</Text>
-        </View>
-        <Text style={styles.logoTitle}>Career Portal</Text>
+        <Image 
+          source={require('../../assets/CareerXplore_logo_alone.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.logoTitle}>CareerXplore</Text>
       </View>
 
       {/* Menu Options */}
@@ -88,24 +96,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  logoBadge: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: "#3B444B",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
-  },
-  logoText: {
-    color: colors.white,
-    fontSize: 20,
-    fontWeight: "800",
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: 4,
   },
   logoTitle: {
-    color: "#E5E7EB",
-    fontSize: 14,
-    fontWeight: "600",
+    color: colors.white,
+    fontSize: 18,
+    fontWeight: "700",
+    fontFamily: "serif",
+    letterSpacing: 0.5,
   },
 
   menuContainer: {

@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import colors from "../theme/colors";
 import ScreenHeader from "../components/ScreenHeader";
+import ProfileNotification from "../components/ProfileNotification";
 import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue } from "firebase/database";
 
-export default function HomeScreen({ showHamburger, onToggleSidebar }) {
+export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePage }) {
   const [fullName, setFullName] = useState("");
 
   useEffect(() => {
@@ -24,10 +25,16 @@ export default function HomeScreen({ showHamburger, onToggleSidebar }) {
   return (
     <View style={styles.container}>
       <ScreenHeader 
-        title="Dashboard" 
-        subtitle="Welcome to your career portal" 
+        style={styles.logoTitle}
+        title="CareerXplore" 
+        subtitle="Unlock Your Perfect Career Path" 
         showHamburger={showHamburger}
         onToggleSidebar={onToggleSidebar}
+        showLogo={true}
+      />
+      
+      <ProfileNotification 
+        onNavigateToProfile={() => setActivePage('Profile')}
       />
       
       <Text style={styles.greeting}>

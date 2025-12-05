@@ -14,17 +14,22 @@ import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue } from "firebase/database";
 import colors from "../theme/colors";
 import ScreenHeader from "../components/ScreenHeader";
+import ProfileNotification from "../components/ProfileNotification";
 import InternshipAPI from "../services/internshipAPI";
+import { isProfileComplete } from "../utils/profileUtils";
 import RealInternshipAPI from "../services/realInternshipAPI";
 import WebScrapingAPI from "../services/webScrapingAPI";
 
-export default function InternshipScreen({ navigation }) {
+export default function InternshipScreen({ navigation, setActivePage }) {
   const [internships, setInternships] = useState([]);
   const [userSkills, setUserSkills] = useState([]);
+  const [userInterests, setUserInterests] = useState([]);
   const [filterMode, setFilterMode] = useState("recommended");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [profileComplete, setProfileComplete] = useState(false);
+  const [lastProfileUpdate, setLastProfileUpdate] = useState(null);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -34,12 +39,31 @@ export default function InternshipScreen({ navigation }) {
     onValue(userRef, (snapshot) => {
       const data = snapshot.val();
       const skills = data?.skills ? (Array.isArray(data.skills) ? data.skills : [data.skills]) : [];
+      const interests = data?.interests ? (Array.isArray(data.interests) ? data.interests : [data.interests]) : [];
+      
       setUserSkills(skills);
-      loadInternships(skills);
+      setUserInterests(interests);
+      
+      // Check if profile is complete
+      const isComplete = isProfileComplete(data);
+      setProfileComplete(isComplete);
+      
+      // Check if profile was recently updated
+      const currentUpdate = data?.profileUpdatedAt || data?.lastUpdated;
+      if (currentUpdate && currentUpdate !== lastProfileUpdate) {
+        setLastProfileUpdate(currentUpdate);
+        if (isComplete) {
+          loadInternships(skills, interests);
+        }
+      } else if (!lastProfileUpdate) {
+        // Initial load
+        setLastProfileUpdate(currentUpdate);
+        loadInternships(skills, interests);
+      }
     });
-  }, []);
+  }, [lastProfileUpdate]);
 
-  const loadInternships = async (skills = userSkills) => {
+  const loadInternships = async (skills = userSkills, interests = userInterests) => {
     try {
       setLoading(true);
       let results = [];
@@ -120,7 +144,7 @@ export default function InternshipScreen({ navigation }) {
 
   const getDisplayedList = () => {
     if (filterMode === "recommended") {
-      return internships;
+      return internships.filter(job => job.matchScore && job.matchScore > 0);
     }
     
     return internships.filter((job) => {
@@ -139,6 +163,9 @@ export default function InternshipScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <ScreenHeader title="Internships" subtitle="Live opportunities from multiple sources" />
+      {!profileComplete && (
+        <ProfileNotification onNavigateToProfile={() => setActivePage && setActivePage('Profile')} />
+      )}
       
       {/* Search + Filter row */}
       <View style={styles.topRow}>
