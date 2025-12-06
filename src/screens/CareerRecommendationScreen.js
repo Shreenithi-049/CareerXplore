@@ -8,12 +8,14 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../theme/colors";
 import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue } from "firebase/database";
 import ScreenHeader from "../components/ScreenHeader";
 import ProfileNotification from "../components/ProfileNotification";
 import { isProfileComplete } from "../utils/profileUtils";
+import FavoritesService from "../services/favoritesService";
 
 const isWeb = Platform.OS === "web";
 
@@ -143,6 +145,7 @@ const CAREERS = [
 
 const CATEGORIES = [
   "All",
+  "Favorites",
   "Software Development",
   "Data & Analytics",
   "Marketing",
@@ -162,6 +165,7 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
   const [activeCategory, setActiveCategory] = useState("All");
   const [hoveredId, setHoveredId] = useState(null);
   const [profileComplete, setProfileComplete] = useState(false);
+  const [favoritedCareers, setFavoritedCareers] = useState([]);
 
   // Load user profile data from Firebase
   useEffect(() => {
@@ -191,7 +195,25 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
       // Check if profile is complete
       setProfileComplete(isProfileComplete(data));
     });
+
+    // Listen to favorite careers
+    const unsubscribe = FavoritesService.listenToFavoriteCareers((favorites) => {
+      setFavoritedCareers(favorites.map(f => f.id));
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  const toggleFavorite = async (e, career) => {
+    e.stopPropagation();
+    const isFavorited = favoritedCareers.includes(career.id);
+    
+    if (isFavorited) {
+      await FavoritesService.removeCareerFromFavorites(career.id);
+    } else {
+      await FavoritesService.addCareerToFavorites(career);
+    }
+  };
 
   // Compute match score for each career and filter **only matched**
   const matchedCareers = useMemo(() => {
@@ -231,7 +253,9 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
   // Apply category + search filters
   const filteredCareers = useMemo(() => {
     return matchedCareers.filter((career) => {
-      if (activeCategory !== "All" && career.category !== activeCategory) {
+      if (activeCategory === "Favorites") {
+        if (!favoritedCareers.includes(career.id)) return false;
+      } else if (activeCategory !== "All" && career.category !== activeCategory) {
         return false;
       }
       if (search) {
@@ -240,7 +264,7 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
       }
       return true;
     });
-  }, [matchedCareers, search, activeCategory]);
+  }, [matchedCareers, search, activeCategory, favoritedCareers]);
 
   const handleOpenDetails = (career) => {
     navigation.navigate("CareerDetails", {
@@ -315,6 +339,18 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
                   onMouseLeave: () => setHoveredId(null),
                 })}
               >
+                {/* Favorite Icon */}
+                <TouchableOpacity 
+                  style={styles.favoriteIcon}
+                  onPress={(e) => toggleFavorite(e, career)}
+                >
+                  <MaterialIcons 
+                    name={favoritedCareers.includes(career.id) ? "favorite" : "favorite-border"} 
+                    size={20} 
+                    color={favoritedCareers.includes(career.id) ? "#D4AF37" : colors.textLight} 
+                  />
+                </TouchableOpacity>
+
                 {/* Match Badge */}
                 <View style={styles.matchBadge}>
                   <Text style={styles.matchBadgeValue}>
@@ -442,6 +478,13 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+  favoriteIcon: {
+    position: "absolute",
+    bottom: 5,
+    right: 20,
+    zIndex: 1,
+    padding: 4,
+  },
   matchBadge: {
     position: "absolute",
     top: 10,

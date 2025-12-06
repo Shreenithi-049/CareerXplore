@@ -5,6 +5,7 @@ import HomeScreen from "../screens/HomeScreen";
 import CareerRecommendationScreen from "../screens/CareerRecommendationScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import InternshipScreen from "../screens/InternshipScreen";
+import ApplicationTrackerScreen from "../screens/ApplicationTrackerScreen";
 import colors from "../theme/colors";
 
 export default function DashboardShell({ navigation }) {
@@ -26,6 +27,8 @@ export default function DashboardShell({ navigation }) {
         return <CareerRecommendationScreen {...commonProps} />;
       case "Internships":
         return <InternshipScreen {...commonProps} />;
+      case "Tracker":
+        return <ApplicationTrackerScreen {...commonProps} />;
       case "Profile":
         return <ProfileScreen {...commonProps} />;
       default:

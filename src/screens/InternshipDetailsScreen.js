@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,12 +6,63 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
+  Alert,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../theme/colors";
+import FavoritesService from "../services/favoritesService";
+import ApplicationTrackerService from "../services/applicationTrackerService";
 
 export default function InternshipDetailsScreen({ route, navigation }) {
   const { job } = route.params;
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isTracked, setIsTracked] = useState(false);
+
+  useEffect(() => {
+    checkFavoriteStatus();
+    checkTrackedStatus();
+  }, []);
+
+  const checkFavoriteStatus = async () => {
+    const favorited = await FavoritesService.isInternshipFavorited(job.id);
+    setIsFavorited(favorited);
+  };
+
+  const checkTrackedStatus = async () => {
+    const tracked = await ApplicationTrackerService.isInternshipTracked(job.id);
+    setIsTracked(tracked);
+  };
+
+  const toggleFavorite = async () => {
+    if (isFavorited) {
+      const result = await FavoritesService.removeInternshipFromFavorites(job.id);
+      if (result.success) {
+        setIsFavorited(false);
+        Alert.alert("Removed", "Internship removed from favorites");
+      }
+    } else {
+      const result = await FavoritesService.addInternshipToFavorites(job);
+      if (result.success) {
+        setIsFavorited(true);
+        Alert.alert("Saved", "Internship added to favorites");
+      }
+    }
+  };
+
+  const handleTrackApplication = async () => {
+    if (isTracked) {
+      Alert.alert("Already Tracked", "This application is already being tracked");
+      return;
+    }
+
+    const result = await ApplicationTrackerService.addApplication(job, "saved");
+    if (result.success) {
+      setIsTracked(true);
+      Alert.alert("Success", "Application added to tracker!");
+    } else {
+      Alert.alert("Error", result.message);
+    }
+  };
 
   const handleApply = () => {
     if (job.applyUrl) {
@@ -39,6 +90,13 @@ export default function InternshipDetailsScreen({ route, navigation }) {
           <MaterialIcons name="arrow-back" size={24} color={colors.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Internship Details</Text>
+        <TouchableOpacity style={styles.favoriteButton} onPress={toggleFavorite}>
+          <MaterialIcons 
+            name={isFavorited ? "favorite" : "favorite-border"} 
+            size={24} 
+            color={isFavorited ? "#D4AF37" : colors.white} 
+          />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
@@ -105,6 +163,18 @@ export default function InternshipDetailsScreen({ route, navigation }) {
           <Text style={styles.postedDate}>Posted on {formatDate(job.postedDate)}</Text>
         </View>
 
+        {/* Track Application Button */}
+        <TouchableOpacity 
+          style={[styles.trackButton, isTracked && styles.trackButtonDisabled]} 
+          onPress={handleTrackApplication}
+          disabled={isTracked}
+        >
+          <MaterialIcons name={isTracked ? "check-circle" : "bookmark-add"} size={20} color={colors.white} />
+          <Text style={styles.trackButtonText}>
+            {isTracked ? "Already Tracked" : "Track Application"}
+          </Text>
+        </TouchableOpacity>
+
         {/* Apply Button */}
         <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
           <MaterialIcons name="send" size={20} color={colors.white} />
@@ -131,9 +201,13 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   headerTitle: {
+    flex: 1,
     fontSize: 20,
     fontWeight: "700",
     color: colors.white,
+  },
+  favoriteButton: {
+    padding: 4,
   },
   content: {
     paddingHorizontal: 20,
@@ -234,6 +308,25 @@ const styles = StyleSheet.create({
     color: colors.textLight,
     fontStyle: "italic",
   },
+  trackButton: {
+    backgroundColor: colors.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 10,
+  },
+  trackButtonDisabled: {
+    backgroundColor: "#6B7280",
+    opacity: 0.7,
+  },
+  trackButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: "600",
+  },
   applyButton: {
     backgroundColor: colors.accent,
     flexDirection: "row",
@@ -242,7 +335,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 16,
     borderRadius: 12,
-    marginTop: 20,
+    marginTop: 10,
     shadowColor: colors.accentGlow,
     shadowOpacity: 0.4,
     shadowRadius: 10,

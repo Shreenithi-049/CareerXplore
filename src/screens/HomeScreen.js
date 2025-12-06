@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import colors from "../theme/colors";
 import ScreenHeader from "../components/ScreenHeader";
 import ProfileNotification from "../components/ProfileNotification";
+import TrackerWidget from "../components/TrackerWidget";
 import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue } from "firebase/database";
 
@@ -33,31 +34,36 @@ export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePa
         showLogo={true}
       />
       
-      <ProfileNotification 
-        onNavigateToProfile={() => setActivePage('Profile')}
-      />
-      
-      <Text style={styles.greeting}>
-        Hello, {fullName || "User"}! 👋
-      </Text>
-      
-      <Text style={styles.sectionTitle}>Overview</Text>
-      <Text style={styles.text}>
-        Use the navigation menu (left) to explore:
-      </Text>
-      <Text style={styles.bullet}>• Career recommendations based on your skills</Text>
-      <Text style={styles.bullet}>• Matching internships</Text>
-      <Text style={styles.bullet}>• Your profile details & updates</Text>
-
-      <View className="spacer" style={{ height: 12 }} />
-
-      <View style={styles.tipBox}>
-        <Text style={styles.tipTitle}>Tip</Text>
-        <Text style={styles.tipText}>
-          Keep your skills and education updated for better recommendations and
-          internship matches.
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <ProfileNotification 
+          onNavigateToProfile={() => setActivePage('Profile')}
+        />
+        
+        <Text style={styles.greeting}>
+          Hello, {fullName || "User"}! 👋
         </Text>
-      </View>
+        
+        <TrackerWidget onNavigate={() => setActivePage('Tracker')} />
+        
+        <Text style={styles.sectionTitle}>Overview</Text>
+        <Text style={styles.text}>
+          Use the navigation menu (left) to explore:
+        </Text>
+        <Text style={styles.bullet}>• Career recommendations based on your skills</Text>
+        <Text style={styles.bullet}>• Matching internships</Text>
+        <Text style={styles.bullet}>• Track your applications</Text>
+        <Text style={styles.bullet}>• Your profile details & updates</Text>
+
+        <View className="spacer" style={{ height: 12 }} />
+
+        <View style={styles.tipBox}>
+          <Text style={styles.tipTitle}>Tip</Text>
+          <Text style={styles.tipText}>
+            Keep your skills and education updated for better recommendations and
+            internship matches.
+          </Text>
+        </View>
+      </ScrollView>
     </View>
   );
 }

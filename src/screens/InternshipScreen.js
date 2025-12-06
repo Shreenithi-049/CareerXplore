@@ -19,6 +19,7 @@ import InternshipAPI from "../services/internshipAPI";
 import { isProfileComplete } from "../utils/profileUtils";
 import RealInternshipAPI from "../services/realInternshipAPI";
 import WebScrapingAPI from "../services/webScrapingAPI";
+import FavoritesService from "../services/favoritesService";
 
 export default function InternshipScreen({ navigation, setActivePage }) {
   const [internships, setInternships] = useState([]);
@@ -30,6 +31,7 @@ export default function InternshipScreen({ navigation, setActivePage }) {
   const [refreshing, setRefreshing] = useState(false);
   const [profileComplete, setProfileComplete] = useState(false);
   const [lastProfileUpdate, setLastProfileUpdate] = useState(null);
+  const [favoritedInternships, setFavoritedInternships] = useState([]);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -61,7 +63,25 @@ export default function InternshipScreen({ navigation, setActivePage }) {
         loadInternships(skills, interests);
       }
     });
+
+    // Listen to favorite internships
+    const unsubscribe = FavoritesService.listenToFavoriteInternships((favorites) => {
+      setFavoritedInternships(favorites.map(f => f.id));
+    });
+
+    return () => unsubscribe();
   }, [lastProfileUpdate]);
+
+  const toggleFavorite = async (e, internship) => {
+    e.stopPropagation();
+    const isFavorited = favoritedInternships.includes(internship.id);
+    
+    if (isFavorited) {
+      await FavoritesService.removeInternshipFromFavorites(internship.id);
+    } else {
+      await FavoritesService.addInternshipToFavorites(internship);
+    }
+  };
 
   const loadInternships = async (skills = userSkills, interests = userInterests) => {
     try {
@@ -137,25 +157,29 @@ export default function InternshipScreen({ navigation, setActivePage }) {
 
   const handleSearch = (text) => {
     setSearch(text);
-    if (filterMode === "all") {
-      setTimeout(() => loadInternships(), 300);
-    }
   };
 
   const getDisplayedList = () => {
-    if (filterMode === "recommended") {
-      return internships.filter(job => job.matchScore && job.matchScore > 0);
+    let filtered = internships;
+    
+    // Apply filter mode
+    if (filterMode === "favorites") {
+      filtered = filtered.filter(job => favoritedInternships.includes(job.id));
+    } else if (filterMode === "recommended") {
+      filtered = filtered.filter(job => job.matchScore && job.matchScore > 0);
     }
     
-    return internships.filter((job) => {
+    // Apply search across all modes
+    if (search) {
       const term = search.toLowerCase();
-      if (!term) return true;
-      return (
+      filtered = filtered.filter((job) => 
         job.title.toLowerCase().includes(term) ||
         job.company.toLowerCase().includes(term) ||
         job.location.toLowerCase().includes(term)
       );
-    });
+    }
+    
+    return filtered;
   };
 
   const list = getDisplayedList();
@@ -216,6 +240,23 @@ export default function InternshipScreen({ navigation, setActivePage }) {
             All Latest
           </Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.filterChip,
+            filterMode === "favorites" && styles.filterChipActive,
+          ]}
+          onPress={() => handleFilterChange("favorites")}
+        >
+          <Text
+            style={[
+              styles.filterText,
+              filterMode === "favorites" && styles.filterTextActive,
+            ]}
+          >
+            Favorites
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Loading indicator */}
@@ -246,11 +287,20 @@ export default function InternshipScreen({ navigation, setActivePage }) {
               >
                 <View style={styles.cardHeader}>
                   <MaterialIcons name="work" size={24} color={colors.primary} />
-                  {item.matchScore && (
-                    <View style={styles.matchBadge}>
-                      <Text style={styles.matchText}>{item.matchScore}% match</Text>
-                    </View>
-                  )}
+                  <View style={styles.cardHeaderRight}>
+                    {item.matchScore && (
+                      <View style={styles.matchBadge}>
+                        <Text style={styles.matchText}>{item.matchScore}% match</Text>
+                      </View>
+                    )}
+                    <TouchableOpacity onPress={(e) => toggleFavorite(e, item)}>
+                      <MaterialIcons 
+                        name={favoritedInternships.includes(item.id) ? "favorite" : "favorite-border"} 
+                        size={20} 
+                        color={favoritedInternships.includes(item.id) ? "#D4AF37" : colors.textLight} 
+                      />
+                    </TouchableOpacity>
+                  </View>
                 </View>
                 
                 <View style={styles.cardContent}>
@@ -385,6 +435,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
+  },
+  cardHeaderRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   matchBadge: {
     backgroundColor: colors.accent + "20",

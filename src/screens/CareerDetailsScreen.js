@@ -1,22 +1,100 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../theme/colors";
+import FavoritesService from "../services/favoritesService";
+import { AIService } from "../services/aiService";
+import { auth, db } from "../services/firebaseConfig";
+import { ref, onValue } from "firebase/database";
 
 export default function CareerDetailsScreen({ route, navigation }) {
   const { career, userSkills } = route.params;
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [aiInsights, setAiInsights] = useState(null);
+  const [loadingAI, setLoadingAI] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
 
   const matchedSkills = career.requiredSkills.filter((s) =>
     userSkills.map((x) => x.toLowerCase()).includes(s.toLowerCase())
   );
 
   const matchPercentage = Math.round((matchedSkills.length / career.requiredSkills.length) * 100);
+
+  useEffect(() => {
+    checkFavoriteStatus();
+    loadUserProfile();
+  }, []);
+
+  const loadUserProfile = () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userRef = ref(db, "users/" + user.uid);
+    onValue(userRef, (snapshot) => {
+      const data = snapshot.val();
+      setUserProfile(data);
+    });
+  };
+
+  const generateAIInsights = async () => {
+    console.log("Generate button clicked");
+    console.log("User Profile:", userProfile);
+    
+    if (!userProfile) {
+      Alert.alert("Error", "Please complete your profile first");
+      return;
+    }
+
+    console.log("Starting AI generation...");
+    setLoadingAI(true);
+    
+    try {
+      const result = await AIService.generateCareerInsights(userProfile, career);
+      console.log("AI Result:", result);
+      setLoadingAI(false);
+
+      if (result.success) {
+        console.log("Setting insights:", result.insights);
+        setAiInsights(result.insights);
+      } else {
+        console.error("AI Error:", result.error);
+        Alert.alert("Error", `Failed to generate AI insights: ${result.error}`);
+      }
+    } catch (error) {
+      console.error("Catch Error:", error);
+      setLoadingAI(false);
+      Alert.alert("Error", "An unexpected error occurred.");
+    }
+  };
+
+  const checkFavoriteStatus = async () => {
+    const favorited = await FavoritesService.isCareerFavorited(career.id);
+    setIsFavorited(favorited);
+  };
+
+  const toggleFavorite = async () => {
+    if (isFavorited) {
+      const result = await FavoritesService.removeCareerFromFavorites(career.id);
+      if (result.success) {
+        setIsFavorited(false);
+        Alert.alert("Removed", "Career removed from favorites");
+      }
+    } else {
+      const result = await FavoritesService.addCareerToFavorites(career);
+      if (result.success) {
+        setIsFavorited(true);
+        Alert.alert("Saved", "Career added to favorites");
+      }
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -29,6 +107,13 @@ export default function CareerDetailsScreen({ route, navigation }) {
           <MaterialIcons name="arrow-back" size={24} color={colors.white} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Career Details</Text>
+        <TouchableOpacity style={styles.favoriteButton} onPress={toggleFavorite}>
+          <MaterialIcons 
+            name={isFavorited ? "favorite" : "favorite-border"} 
+            size={24} 
+            color={isFavorited ? "#D4AF37" : colors.white} 
+          />
+        </TouchableOpacity>
       </View>
       {/* Header */}
       <View style={styles.header}>
@@ -129,6 +214,77 @@ export default function CareerDetailsScreen({ route, navigation }) {
           </View>
         ))}
       </View>
+
+      {/* AI-Powered Insights Section */}
+      <View style={styles.aiSection}>
+        <View style={styles.aiHeader}>
+          <MaterialIcons name="auto-awesome" size={24} color="#9333EA" />
+          <Text style={styles.aiTitle}>AI-Powered Career Insights</Text>
+        </View>
+        
+        {!aiInsights ? (
+          <TouchableOpacity 
+            style={styles.generateButton} 
+            onPress={generateAIInsights}
+            disabled={loadingAI}
+          >
+            {loadingAI ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <>
+                <MaterialIcons name="psychology" size={20} color={colors.white} />
+                <Text style={styles.generateButtonText}>Generate Personalized Insights</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        ) : (
+          <View>
+            <View style={styles.insightCard}>
+              <Text style={styles.insightLabel}>🎯 Why This is Recommended</Text>
+              <Text style={styles.insightText}>{aiInsights.whyRecommended}</Text>
+            </View>
+
+            {aiInsights.skillGaps.length > 0 && (
+              <View style={styles.insightCard}>
+                <Text style={styles.insightLabel}>📚 Skills to Learn</Text>
+                {aiInsights.skillGaps.map((skill, idx) => (
+                  <View key={idx} style={styles.insightItem}>
+                    <MaterialIcons name="fiber-manual-record" size={8} color="#9333EA" />
+                    <Text style={styles.insightItemText}>{skill}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {aiInsights.recommendations.length > 0 && (
+              <View style={styles.insightCard}>
+                <Text style={styles.insightLabel}>🎓 Recommended Courses</Text>
+                {aiInsights.recommendations.map((rec, idx) => (
+                  <View key={idx} style={styles.insightItem}>
+                    <MaterialIcons name="fiber-manual-record" size={8} color="#9333EA" />
+                    <Text style={styles.insightItemText}>{rec}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {aiInsights.futureScope && (
+              <View style={styles.insightCard}>
+                <Text style={styles.insightLabel}>🚀 Future Outlook</Text>
+                <Text style={styles.insightText}>{aiInsights.futureScope}</Text>
+              </View>
+            )}
+
+            <TouchableOpacity 
+              style={styles.regenerateButton} 
+              onPress={generateAIInsights}
+            >
+              <MaterialIcons name="refresh" size={18} color="#9333EA" />
+              <Text style={styles.regenerateButtonText}>Regenerate Insights</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -149,9 +305,13 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   headerTitle: {
+    flex: 1,
     fontSize: 20,
     fontWeight: "700",
     color: colors.white,
+  },
+  favoriteButton: {
+    padding: 4,
   },
   header: {
     marginBottom: 20,
@@ -335,5 +495,86 @@ const styles = StyleSheet.create({
     color: colors.textDark,
     lineHeight: 20,
     flex: 1,
+  },
+  aiSection: {
+    marginTop: 10,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    backgroundColor: "#F5F3FF",
+    borderRadius: 12,
+    marginHorizontal: 20,
+  },
+  aiHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  aiTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#9333EA",
+    marginLeft: 8,
+  },
+  generateButton: {
+    backgroundColor: "#9333EA",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 10,
+    gap: 8,
+  },
+  generateButtonText: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  insightCard: {
+    backgroundColor: colors.white,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#E9D5FF",
+  },
+  insightLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#9333EA",
+    marginBottom: 8,
+  },
+  insightText: {
+    fontSize: 13,
+    color: colors.textDark,
+    lineHeight: 19,
+  },
+  insightItem: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 6,
+    paddingLeft: 4,
+  },
+  insightItemText: {
+    fontSize: 13,
+    color: colors.textDark,
+    marginLeft: 8,
+    flex: 1,
+  },
+  regenerateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#9333EA",
+    backgroundColor: colors.white,
+    gap: 6,
+  },
+  regenerateButtonText: {
+    color: "#9333EA",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
