@@ -1,4 +1,6 @@
-const API_KEY = "AIzaSyBSKLKoY_weXoKGPrCUUc_KyIiy98kg8LI";
+import Constants from 'expo-constants';
+
+const API_KEY = Constants.expoConfig?.extra?.GEMINI_API_KEY;
 
 export const AIService = {
   async generateCareerInsights(userProfile, career) {
