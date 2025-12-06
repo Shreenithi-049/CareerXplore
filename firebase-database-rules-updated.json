@@ -1,0 +1,42 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid || root.child('admins').child(auth.uid).child('role').val() === 'admin'",
+        ".write": "$uid === auth.uid",
+        "favorites": {
+          ".read": "$uid === auth.uid",
+          ".write": "$uid === auth.uid"
+        }
+      }
+    },
+    "admins": {
+      "$uid": {
+        ".read": "$uid === auth.uid || root.child('admins').child(auth.uid).child('role').val() === 'admin'",
+        ".write": "root.child('admins').child(auth.uid).child('role').val() === 'admin'"
+      }
+    },
+    "internships": {
+      "pending": {
+        ".read": "auth != null",
+        ".write": "root.child('admins').child(auth.uid).child('role').val() === 'admin'"
+      },
+      "approved": {
+        ".read": "auth != null",
+        ".write": "root.child('admins').child(auth.uid).child('role').val() === 'admin'"
+      }
+    },
+    "careers": {
+      ".read": "auth != null",
+      ".write": "root.child('admins').child(auth.uid).child('role').val() === 'admin'"
+    },
+    "notifications": {
+      ".read": "auth != null",
+      ".write": "root.child('admins').child(auth.uid).child('role').val() === 'admin'"
+    },
+    "analytics": {
+      ".read": "root.child('admins').child(auth.uid).child('role').val() === 'admin'",
+      ".write": "root.child('admins').child(auth.uid).child('role').val() === 'admin'"
+    }
+  }
+}
