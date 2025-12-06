@@ -6,6 +6,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Image,
 } from "react-native";
 import colors from "../theme/colors";
 import InputField from "../components/InputField";
@@ -41,7 +42,15 @@ export default function SignupScreen({ navigation }) {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
-      <Text style={styles.title}>Create Account</Text>
+      <View style={styles.logoContainer}>
+        <Image
+          source={require("../../assets/CareerXplore_logo_alone.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.title}>CareerXplore</Text>
+      </View>
+      <Text style={styles.subtitle}>Create your account</Text>
 
       <View style={styles.card}>
         <InputField
@@ -85,11 +94,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
   },
+  logoContainer: {
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: 5,
+  },
   title: {
     fontSize: 32,
     fontWeight: "700",
     color: colors.primary,
-    marginBottom: 20,
+    letterSpacing: 0.5,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: colors.textLight,
+    marginBottom: 25,
+    marginTop: 5,
   },
   card: {
     width: "100%",
