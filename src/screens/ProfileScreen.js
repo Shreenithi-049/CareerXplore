@@ -20,9 +20,10 @@ import InterestSelector from "../components/InterestSelector";
 import ResumeUploader from "../components/ResumeUploader";
 import ResumeScoreCard from "../components/ResumeScoreCard";
 import ScreenHeader from "../components/ScreenHeader";
+import XPProgressBar from "../components/XPProgressBar";
 import { isProfileComplete } from "../utils/profileUtils";
 import { forceProfileComplete } from "../utils/forceProfileComplete";
-import { awardXP } from "../services/gamificationService";
+import { awardXP, BADGES } from "../services/gamificationService";
 
 export default function ProfileScreen({ navigation }) {
   const [fullName, setFullName] = useState("");
@@ -35,6 +36,8 @@ export default function ProfileScreen({ navigation }) {
   const [originalData, setOriginalData] = useState({});
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showResumeUpload, setShowResumeUpload] = useState(false);
+  const [xp, setXp] = useState(0);
+  const [badges, setBadges] = useState([]);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -52,6 +55,8 @@ export default function ProfileScreen({ navigation }) {
           resume: data.resume || null,
           profileImage: data.profileImage || null
         };
+        setXp(data.xp || 0);
+        setBadges(data.badges || []);
         setFullName(userData.fullName);
         setEducation(userData.education);
         setSkills(userData.skills);
@@ -290,6 +295,25 @@ export default function ProfileScreen({ navigation }) {
           </View>
         </View>
 
+        <XPProgressBar currentXP={xp} nextLevel={300} />
+
+        {badges.length > 0 && (
+          <View style={styles.badgesSection}>
+            <Text style={styles.label}>Badges Earned</Text>
+            <View style={styles.badgesGrid}>
+              {badges.map(badgeId => {
+                const badge = BADGES.find(b => b.id === badgeId);
+                return badge ? (
+                  <View key={badgeId} style={styles.badge}>
+                    <Text style={styles.badgeIcon}>{badge.icon}</Text>
+                    <Text style={styles.badgeName}>{badge.name}</Text>
+                  </View>
+                ) : null;
+              })}
+            </View>
+          </View>
+        )}
+
         <Text style={styles.label}>Full Name</Text>
         <InputField 
           value={fullName} 
@@ -366,7 +390,7 @@ const styles = StyleSheet.create({
   editButton: {
     position: "absolute",
     top: 0,
-    right: 0,
+    right: 60,
     backgroundColor: colors.accent,
     flexDirection: "row",
     alignItems: "center",
@@ -499,5 +523,32 @@ const styles = StyleSheet.create({
   modalButtonText: {
     color: colors.white,
     fontWeight: "600",
+  },
+  badgesSection: {
+    marginVertical: 16,
+  },
+  badgesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    marginTop: 8,
+  },
+  badge: {
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.grayBorder,
+    minWidth: 80,
+  },
+  badgeIcon: {
+    fontSize: 32,
+    marginBottom: 4,
+  },
+  badgeName: {
+    fontSize: 10,
+    color: colors.textLight,
+    textAlign: "center",
   },
 });

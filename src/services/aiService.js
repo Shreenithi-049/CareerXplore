@@ -12,13 +12,15 @@ Skills: ${userProfile.skills?.join(", ") || "None"}
 Interests: ${userProfile.interests?.join(", ") || "None"}
 Education: ${userProfile.education || "Not specified"}
 
-Analyze why "${career.title}" is recommended for this user. Provide:
-1. Why this career matches (2-3 sentences)
-2. Skill gaps (list 3-4 missing skills they should learn)
-3. Top 3 recommended courses/certifications
-4. Future scope prediction (1-2 sentences)
+Analyze why "${career.title}" is recommended for this user.
 
-Keep response concise and actionable.`;
+Respond ONLY in JSON format:
+{
+  "whyRecommended": "2-3 sentences explaining why this career matches",
+  "skillGaps": ["skill1", "skill2", "skill3", "skill4"],
+  "recommendedCourses": ["course1", "course2", "course3"],
+  "futureScope": "1-2 sentences about future prospects"
+}`;
 
       console.log("Calling Gemini API...");
       
@@ -57,7 +59,7 @@ Keep response concise and actionable.`;
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
       console.log("AI Response:", text);
 
-      const insights = this.parseInsights(text);
+      const insights = this.parseJSONInsights(text);
       console.log("Parsed Insights:", insights);
 
       return {
@@ -73,48 +75,28 @@ Keep response concise and actionable.`;
     }
   },
 
-  parseInsights(text) {
-    const sections = {
-      whyRecommended: "",
-      skillGaps: [],
-      recommendations: [],
-      futureScope: "",
-    };
-
-    // Split by numbered sections
-    const parts = text.split(/\d+\.\s+/);
-    
-    if (parts.length >= 5) {
-      // Section 1: Why matches
-      sections.whyRecommended = parts[1]?.trim() || "This career aligns with your profile.";
-      
-      // Section 2: Skill gaps
-      const skillText = parts[2]?.trim() || "";
-      sections.skillGaps = skillText
-        .split(/\n|\*|•|-/)
-        .map(s => s.trim())
-        .filter(s => s && s.length > 3)
-        .slice(0, 4);
-      
-      // Section 3: Recommendations
-      const recText = parts[3]?.trim() || "";
-      sections.recommendations = recText
-        .split(/\n|\*|•|-/)
-        .map(s => s.trim())
-        .filter(s => s && s.length > 3)
-        .slice(0, 3);
-      
-      // Section 4: Future scope
-      sections.futureScope = parts[4]?.trim() || "This career has strong growth potential.";
-    } else {
-      // Fallback: use entire text
-      sections.whyRecommended = text.substring(0, 200) || "This career matches your profile.";
-      sections.skillGaps = ["Data Structures", "System Design", "Cloud Computing"];
-      sections.recommendations = ["Online courses", "Certifications", "Practice projects"];
-      sections.futureScope = "Strong growth expected in this field.";
+  parseJSONInsights(text) {
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          whyRecommended: parsed.whyRecommended || "This career aligns with your profile.",
+          skillGaps: Array.isArray(parsed.skillGaps) ? parsed.skillGaps : [],
+          recommendations: Array.isArray(parsed.recommendedCourses) ? parsed.recommendedCourses : [],
+          futureScope: parsed.futureScope || "Strong growth expected in this field."
+        };
+      }
+    } catch (e) {
+      console.error("JSON parse error:", e);
     }
-
-    return sections;
+    
+    return {
+      whyRecommended: "This career matches your profile.",
+      skillGaps: ["Data Structures", "System Design", "Cloud Computing"],
+      recommendations: ["Online courses", "Certifications", "Practice projects"],
+      futureScope: "Strong growth expected in this field."
+    };
   },
 
   async generateCareerRoadmap(userProfile, career, userSkills) {
@@ -192,24 +174,43 @@ Senior: $XX,000 (7+ years)`;
 
   async analyzeResume(resumeData, targetRole = 'Software Developer') {
     try {
-      console.log('Analyzing resume data:', resumeData);
+      console.log('Analyzing resume for role:', targetRole);
       
-      // Weighted scoring calculation
-      const scores = this.calculateSectionScores(resumeData, targetRole);
-      const totalScore = scores.contact.score + scores.summary.score + scores.education.score + scores.skills.score + scores.projects.score;
-      
-      console.log('Calculated scores:', scores, 'Total:', totalScore);
-      
-      // Generate specific analysis based on actual content
-      const analysis = this.generateSpecificAnalysis(resumeData, scores, totalScore);
-      
-      console.log('Generated analysis:', analysis);
-      return { success: true, analysis };
+      const prompt = `Analyze this resume for "${targetRole}" role:
 
-      // API call temporarily disabled for testing
-      // const response = await fetch(...)
-      // Will re-enable once basic functionality works
+Skills: ${(resumeData.skills || []).join(", ") || "None"}
+Education: ${resumeData.education || "Not specified"}
+Projects: ${resumeData.projects || "None"}
+Experience: ${resumeData.experience || "None"}
+
+Respond ONLY in JSON format:
+{
+  "atsScore": 85,
+  "missingSkills": ["skill1", "skill2", "skill3"],
+  "strengths": ["strength1", "strength2", "strength3"],
+  "weakSections": ["section1", "section2"]
+}`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }]
+          }),
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || "API failed");
+
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const analysis = this.parseResumeAnalysisJSON(text);
+
+      return { success: true, analysis };
     } catch (error) {
+      console.error('Resume analysis error:', error);
       return { success: false, error: error.message };
     }
   },
@@ -222,24 +223,24 @@ Senior: $XX,000 (7+ years)`;
         throw new Error('Gemini API key not configured');
       }
       
-      const prompt = `Extract information from this resume file and return ONLY a JSON object with the actual data found:
+      const prompt = `Extract information from this resume and return ONLY a JSON object:
 
 {
-  "name": "actual full name from resume",
-  "email": "actual email address found",
-  "phone": "actual phone number found",
-  "linkedin": "actual LinkedIn URL if present",
-  "github": "actual GitHub URL if present",
-  "summary": "actual professional summary/objective text",
-  "education": "actual education details with university, degree, year",
-  "skills": ["actual technical skills listed"],
-  "experience": "actual work experience details",
-  "projects": "actual project descriptions with technologies",
-  "certifications": "actual certifications mentioned",
-  "interests": ["actual interests if mentioned"]
+  "name": "full name",
+  "email": "email address",
+  "phone": "phone number",
+  "linkedin": "LinkedIn URL",
+  "github": "GitHub URL",
+  "summary": "professional summary",
+  "education": "education details",
+  "skills": ["list of technical skills"],
+  "experience": "work experience",
+  "projects": "project descriptions",
+  "certifications": "certifications",
+  "interests": ["interests"]
 }
 
-IMPORTANT: Extract ONLY what is actually written in the resume. If information is not present, use empty string "" or empty array []. Do not make up or assume any information.`;
+Extract ONLY actual data from resume. Use "" or [] if not present.`;
 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
@@ -411,27 +412,28 @@ IMPORTANT: Extract ONLY what is actually written in the resume. If information i
     return scores;
   },
 
-  parseResumeAnalysis(text) {
-    const analysis = { score: 85, missing: [], suggestions: [] };
-    const lines = text.split("\n").map(l => l.trim()).filter(l => l);
-    let section = "";
-
-    lines.forEach(line => {
-      const scoreMatch = line.match(/SCORE:\s*(\d+)/i);
-      if (scoreMatch) analysis.score = parseInt(scoreMatch[1]);
-      else if (line.match(/MISSING:/i)) section = "missing";
-      else if (line.match(/SUGGESTIONS?:/i)) section = "suggestions";
-      else if (line.startsWith("-") || line.startsWith("*") || line.startsWith("•")) {
-        const content = line.substring(1).trim();
-        if (section === "missing" && analysis.missing.length < 4) analysis.missing.push(content);
-        else if (section === "suggestions" && analysis.suggestions.length < 4) analysis.suggestions.push(content);
+  parseResumeAnalysisJSON(text) {
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return {
+          score: Math.min(100, Math.max(0, parsed.atsScore || 75)),
+          missing: Array.isArray(parsed.missingSkills) ? parsed.missingSkills.slice(0, 4) : [],
+          suggestions: Array.isArray(parsed.strengths) ? parsed.strengths.slice(0, 3) : [],
+          weakSections: Array.isArray(parsed.weakSections) ? parsed.weakSections.slice(0, 2) : []
+        };
       }
-    });
-
-    if (analysis.missing.length === 0) analysis.missing = ["Add LinkedIn profile URL", "Include GitHub portfolio link", "Mention relevant certifications", "Add quantifiable project metrics"];
-    if (analysis.suggestions.length === 0) analysis.suggestions = ["Use action verbs: 'Built React app reducing load time by 40%'", "Add tech stack: 'Used Node.js, MongoDB, Express'", "Quantify impact: 'Served 500+ users, 99% uptime'", "Show problem-solving: 'Solved auth issues using JWT'"];
-
-    return analysis;
+    } catch (e) {
+      console.error("JSON parse error:", e);
+    }
+    
+    return {
+      score: 75,
+      missing: ["Add LinkedIn profile", "Include GitHub portfolio", "Mention certifications"],
+      suggestions: ["Strong technical skills", "Good project experience", "Clear education background"],
+      weakSections: ["Professional summary", "Quantifiable metrics"]
+    };
   },
 
   parseRoadmap(text) {

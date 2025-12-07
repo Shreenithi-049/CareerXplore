@@ -5,11 +5,13 @@ import ScreenHeader from "../components/ScreenHeader";
 import ProfileNotification from "../components/ProfileNotification";
 import TrackerWidget from "../components/TrackerWidget";
 import GamificationCard from "../components/GamificationCard";
+import DailyXPCard from "../components/DailyXPCard";
 import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue } from "firebase/database";
 
 export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePage }) {
   const [fullName, setFullName] = useState("");
+  const [dailyXP, setDailyXP] = useState(0);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -21,6 +23,7 @@ export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePa
       if (data?.fullName) {
         setFullName(data.fullName);
       }
+      setDailyXP(data?.xp || 0);
     });
   }, []);
 
@@ -44,6 +47,11 @@ export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePa
           Hello, {fullName || "User"}! 👋
         </Text>
         
+        <DailyXPCard 
+          dailyXP={dailyXP} 
+          motivationalText="Keep exploring careers to earn more XP!" 
+        />
+        
         <GamificationCard />
         
         <TrackerWidget onNavigate={() => setActivePage('Tracker')} />
@@ -55,6 +63,7 @@ export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePa
         <Text style={styles.bullet}>• Career recommendations based on your skills</Text>
         <Text style={styles.bullet}>• Matching internships</Text>
         <Text style={styles.bullet}>• Track your applications</Text>
+        <Text style={styles.bullet}>• View your performance</Text>
         <Text style={styles.bullet}>• Your profile details & updates</Text>
 
         <View className="spacer" style={{ height: 12 }} />
@@ -81,6 +90,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.primary,
     marginBottom: 16,
+    textShadowColor: 'rgba(200,169,81,0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   sectionTitle: {
     fontSize: 18,
@@ -106,6 +118,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.grayLight,
     borderWidth: 1,
     borderColor: colors.grayBorder,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   tipTitle: {
     fontSize: 14,

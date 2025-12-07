@@ -11,11 +11,12 @@ export default function Sidebar({ activePage, setActivePage, navigation, onClose
     { key: "Careers", label: "Careers", icon: "psychology" },
     { key: "Internships", label: "Internships", icon: "work" },
     { key: "Tracker", label: "App Tracker", icon: "track-changes" },
+    { key: "Analytics", label: "Analytics", icon: "bar-chart" },
     { key: "Profile", label: "Profile", icon: "person" },
   ];
 
   const handleMenuPress = (key) => {
-    if (key === "Dashboard" || key === "Careers" || key === "Internships" || key === "Tracker" || key === "Profile") {
+    if (key === "Dashboard" || key === "Careers" || key === "Internships" || key === "Tracker" || key === "Analytics" || key === "Profile") {
       setActivePage(key);
       if (onClose) onClose();
     }

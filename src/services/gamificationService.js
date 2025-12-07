@@ -1,4 +1,4 @@
-import { ref, update, onValue } from "firebase/database";
+import { ref, update, onValue, get, increment } from "firebase/database";
 import { db, auth } from "./firebaseConfig";
 
 const XP_REWARDS = {
@@ -22,24 +22,23 @@ export const awardXP = async (action, amount = null) => {
   if (!user) return;
 
   const xpAmount = amount || XP_REWARDS[action] || 0;
+  if (xpAmount === 0) return;
+
   const userRef = ref(db, `users/${user.uid}`);
 
-  onValue(userRef, async (snapshot) => {
-    const data = snapshot.val();
-    const currentXP = data?.xp || 0;
-    const newXP = currentXP + xpAmount;
-
-    await update(userRef, { xp: newXP });
-    checkAndAwardBadges(user.uid, data);
-  }, { onlyOnce: true });
+  await update(userRef, { xp: increment(xpAmount) });
+  
+  const snapshot = await get(userRef);
+  await checkAndAwardBadges(user.uid, snapshot.val());
 };
 
 const checkAndAwardBadges = async (userId, userData) => {
   const userRef = ref(db, `users/${userId}`);
   const earnedBadges = userData?.badges || [];
+  const newBadges = [];
 
-  BADGES.forEach(async (badge) => {
-    if (earnedBadges.includes(badge.id)) return;
+  for (const badge of BADGES) {
+    if (earnedBadges.includes(badge.id)) continue;
 
     let earned = false;
     switch (badge.requirement) {
@@ -58,11 +57,15 @@ const checkAndAwardBadges = async (userId, userData) => {
     }
 
     if (earned) {
-      await update(userRef, {
-        badges: [...earnedBadges, badge.id],
-      });
+      newBadges.push(badge.id);
     }
-  });
+  }
+
+  if (newBadges.length > 0) {
+    await update(userRef, {
+      badges: [...earnedBadges, ...newBadges],
+    });
+  }
 };
 
 export const getProfileProgress = (userData) => {
@@ -79,6 +82,17 @@ export const getProfileProgress = (userData) => {
 
 export const getBadgeDetails = (badgeId) => {
   return BADGES.find((b) => b.id === badgeId);
+};
+
+export const trackAction = async (actionType, value = 1) => {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const userRef = ref(db, `users/${user.uid}`);
+  await update(userRef, { [actionType]: increment(value) });
+  
+  const snapshot = await get(userRef);
+  await checkAndAwardBadges(user.uid, snapshot.val());
 };
 
 export { BADGES, XP_REWARDS };

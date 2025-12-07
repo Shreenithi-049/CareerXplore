@@ -1,20 +1,28 @@
 {
   "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
     "admins": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && auth.uid === $uid"
       }
     },
-    "users": {
-      "$uid": {
-        ".read": "$uid === auth.uid",
-        ".write": "$uid === auth.uid",
-        "favorites": {
-          ".read": "$uid === auth.uid",
-          ".write": "$uid === auth.uid"
-        }
-      }
+    "careers": {
+      ".read": "auth != null",
+      ".write": "root.child('admins/' + auth.uid + '/role').val() === 'admin'"
+    },
+    "internships": {
+      ".read": "auth != null",
+      ".write": "root.child('admins/' + auth.uid + '/role').val() === 'admin'"
+    },
+    "notifications": {
+      ".read": "auth != null",
+      ".write": "root.child('admins/' + auth.uid + '/role').val() === 'admin'"
     },
     ".read": false,
     ".write": false

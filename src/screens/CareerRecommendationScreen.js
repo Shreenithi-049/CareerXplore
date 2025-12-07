@@ -225,17 +225,8 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
       const skillMatchCount = skillMatched.length;
       const skillMatchRatio = required.length ? skillMatchCount / required.length : 0;
       
-      // Bonus scoring for interests alignment (if available)
-      let interestBonus = 0;
-      if (userInterests.length > 0) {
-        const careerKeywords = [...career.title.toLowerCase().split(' '), ...career.category.toLowerCase().split(' ')];
-        const interestMatch = userInterests.some(interest => 
-          careerKeywords.some(keyword => keyword.includes(interest) || interest.includes(keyword))
-        );
-        interestBonus = interestMatch ? 0.2 : 0;
-      }
-      
-      const totalMatchRatio = skillMatchRatio + interestBonus;
+      // Cap at 100% - extra skills don't increase score beyond 100%
+      const totalMatchRatio = Math.min(1, skillMatchRatio);
       
       return {
         ...career,
@@ -438,11 +429,11 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: "#E0E4E7",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
     position: "relative",
   },
   cardWeb: {
@@ -454,11 +445,13 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   cardHovered: {
-    shadowOpacity: 0.18,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 5,
-    transform: [{ translateY: -2 }],
+    shadowColor: colors.accent,
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+    transform: [{ translateY: -4 }, { scale: 1.02 }],
+    borderColor: colors.accent,
   },
 
   cardTitle: {
@@ -495,12 +488,20 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(200,169,81,0.16)",
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 4,
   },
   matchBadgeValue: {
     fontSize: 12,
     fontWeight: "700",
     color: colors.accent,
     marginBottom: -2,
+    textShadowColor: 'rgba(200,169,81,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   matchBadgeLabel: {
     fontSize: 10,

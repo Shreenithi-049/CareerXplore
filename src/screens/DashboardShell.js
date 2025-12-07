@@ -6,6 +6,8 @@ import CareerRecommendationScreen from "../screens/CareerRecommendationScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import InternshipScreen from "../screens/InternshipScreen";
 import ApplicationTrackerScreen from "../screens/ApplicationTrackerScreen";
+import AnalyticsScreen from "../screens/AnalyticsScreen";
+import ChatbotWidget from "../components/ChatbotWidget";
 import colors from "../theme/colors";
 
 export default function DashboardShell({ navigation }) {
@@ -29,6 +31,8 @@ export default function DashboardShell({ navigation }) {
         return <InternshipScreen {...commonProps} />;
       case "Tracker":
         return <ApplicationTrackerScreen {...commonProps} />;
+      case "Analytics":
+        return <AnalyticsScreen {...commonProps} />;
       case "Profile":
         return <ProfileScreen {...commonProps} />;
       default:
@@ -48,7 +52,10 @@ export default function DashboardShell({ navigation }) {
           onClose={() => setSidebarVisible(false)}
         />
       )}
-      <View style={styles.content}>{renderContent()}</View>
+      <View style={styles.content}>
+        {renderContent()}
+        <ChatbotWidget />
+      </View>
     </View>
   );
 }
