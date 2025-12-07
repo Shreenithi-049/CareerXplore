@@ -11,6 +11,7 @@ const colors = {
   grayLight: "#F3F4F6",
   grayBorder: "#D1D5D8",
   danger: "#E15B64",
+  success: "#4CAF50",
 };
 
 export default colors;

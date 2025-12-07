@@ -215,6 +215,15 @@ export default function CareerDetailsScreen({ route, navigation }) {
         ))}
       </View>
 
+      {/* Roadmap Button */}
+      <TouchableOpacity 
+        style={styles.roadmapButton}
+        onPress={() => navigation.navigate("CareerRoadmap", { career, userSkills })}
+      >
+        <MaterialIcons name="explore" size={22} color={colors.white} />
+        <Text style={styles.roadmapButtonText}>View Career Roadmap 🧭</Text>
+      </TouchableOpacity>
+
       {/* AI-Powered Insights Section */}
       <View style={styles.aiSection}>
         <View style={styles.aiHeader}>
@@ -495,6 +504,27 @@ const styles = StyleSheet.create({
     color: colors.textDark,
     lineHeight: 20,
     flex: 1,
+  },
+  roadmapButton: {
+    backgroundColor: colors.accent,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    gap: 8,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  roadmapButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: "700",
   },
   aiSection: {
     marginTop: 10,

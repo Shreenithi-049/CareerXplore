@@ -22,7 +22,7 @@ import ScreenHeader from "../components/ScreenHeader";
 import { isProfileComplete } from "../utils/profileUtils";
 import { forceProfileComplete } from "../utils/forceProfileComplete";
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ navigation }) {
   const [fullName, setFullName] = useState("");
   const [education, setEducation] = useState("");
   const [skills, setSkills] = useState([]);
@@ -43,7 +43,7 @@ export default function ProfileScreen() {
       const data = snapshot.val();
       if (data) {
         const userData = {
-          fullName: data.fullName || "",
+          fullName: data.fullName || data.name || "",
           education: data.education || "",
           skills: Array.isArray(data.skills) ? data.skills : data.skills ? [data.skills] : [],
           interests: Array.isArray(data.interests) ? data.interests : data.interests ? [data.interests] : [],
@@ -313,8 +313,6 @@ export default function ProfileScreen() {
           onUpload={setResume}
           disabled={!isEditing}
         />
-        
-
 
         {isEditing && (
           <View style={styles.buttonContainer}>
