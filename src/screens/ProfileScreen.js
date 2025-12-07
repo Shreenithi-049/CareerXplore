@@ -159,6 +159,8 @@ export default function ProfileScreen({ navigation }) {
     console.log('Triggering re-recommendations with updated profile data');
   };
 
+
+
   const handleSave = () => {
     const user = auth.currentUser;
     if (!user) {
