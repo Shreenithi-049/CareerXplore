@@ -4,6 +4,7 @@ import colors from "../theme/colors";
 import ScreenHeader from "../components/ScreenHeader";
 import ProfileNotification from "../components/ProfileNotification";
 import TrackerWidget from "../components/TrackerWidget";
+import GamificationCard from "../components/GamificationCard";
 import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue } from "firebase/database";
 
@@ -42,6 +43,8 @@ export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePa
         <Text style={styles.greeting}>
           Hello, {fullName || "User"}! 👋
         </Text>
+        
+        <GamificationCard />
         
         <TrackerWidget onNavigate={() => setActivePage('Tracker')} />
         

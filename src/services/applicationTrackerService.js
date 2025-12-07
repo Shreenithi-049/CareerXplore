@@ -1,5 +1,5 @@
 import { auth, db } from "./firebaseConfig";
-import { ref, set, remove, onValue, get, push } from "firebase/database";
+import { ref, set, remove, onValue, get, push, update } from "firebase/database";
 
 const ApplicationTrackerService = {
   // Add new application
@@ -67,6 +67,15 @@ const ApplicationTrackerService = {
         updatedAt: new Date().toISOString(),
         timeline: updatedTimeline
       });
+
+      // Track application count for badges
+      if (newStatus === "applied") {
+        const userRef = ref(db, `users/${user.uid}`);
+        const userSnapshot = await get(userRef);
+        const userData = userSnapshot.val();
+        const applications = (userData?.applications || 0) + 1;
+        await update(userRef, { applications });
+      }
 
       return { success: true };
     } catch (error) {

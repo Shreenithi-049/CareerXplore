@@ -14,6 +14,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../theme/colors";
 import ScreenHeader from "../components/ScreenHeader";
 import ApplicationTrackerService from "../services/applicationTrackerService";
+import { awardXP } from "../services/gamificationService";
 
 const STATUSES = ["saved", "applied", "interview", "offer", "joined", "rejected"];
 
@@ -45,6 +46,8 @@ export default function ApplicationTrackerScreen() {
     const result = await ApplicationTrackerService.updateStatus(appId, newStatus);
     if (!result.success) {
       Alert.alert("Error", result.message);
+    } else if (newStatus === "applied") {
+      awardXP("APPLY_INTERNSHIP");
     }
   };
 

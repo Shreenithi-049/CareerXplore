@@ -22,6 +22,7 @@ import ResumeScoreCard from "../components/ResumeScoreCard";
 import ScreenHeader from "../components/ScreenHeader";
 import { isProfileComplete } from "../utils/profileUtils";
 import { forceProfileComplete } from "../utils/forceProfileComplete";
+import { awardXP } from "../services/gamificationService";
 
 export default function ProfileScreen({ navigation }) {
   const [fullName, setFullName] = useState("");
@@ -172,6 +173,16 @@ export default function ProfileScreen({ navigation }) {
     const profileData = { fullName, education, skills, interests };
     const profileCompleteStatus = isProfileComplete(profileData);
     
+    // Award XP for profile updates
+    const skillsAdded = skills.length - originalData.skills.length;
+    const interestsAdded = interests.length - originalData.interests.length;
+    const resumeUploaded = resume && !originalData.resume;
+    
+    if (skillsAdded > 0) awardXP("ADD_SKILL", skillsAdded * 10);
+    if (interestsAdded > 0) awardXP("ADD_INTEREST", interestsAdded * 10);
+    if (resumeUploaded) awardXP("UPLOAD_RESUME");
+    if (profileCompleteStatus && !originalData.profileComplete) awardXP("PROFILE_COMPLETE");
+    
     update(ref(db, "users/" + user.uid), {
       fullName,
       education,
@@ -190,7 +201,6 @@ export default function ProfileScreen({ navigation }) {
         setIsEditing(false);
         if (profileCompleteStatus) {
           triggerReRecommendations();
-          // Force immediate update of profileComplete flag
           update(ref(db, "users/" + user.uid), {
             profileComplete: true
           }).catch(err => console.log('Error updating profileComplete flag:', err));

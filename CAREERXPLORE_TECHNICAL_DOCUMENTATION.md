@@ -95,6 +95,12 @@ CareerXplore Platform
    - Manage multiple applications
    - Status updates (Applied, Interview, Offer, Rejected)
 
+6. **Gamification System**
+   - XP rewards for activities
+   - Achievement badges
+   - Profile completion progress bar
+   - Real-time engagement tracking
+
 ### Screen Structure
 
 ```
@@ -124,6 +130,8 @@ App
 | `ResumeUploader.js` | Document upload handler |
 | `TrackerWidget.js` | Application status widget |
 | `ProfileNotification.js` | Profile completion alerts |
+| `ProgressBar.js` | Visual progress indicator |
+| `GamificationCard.js` | XP, badges, and progress display |
 
 ---
 
@@ -511,6 +519,43 @@ export default {
 
 ---
 
+## 🎮 Gamification System
+
+### XP Rewards
+
+| Action | XP Earned |
+|--------|----------|
+| Complete Profile | 100 XP |
+| Add Skill | 10 XP |
+| Add Interest | 10 XP |
+| Upload Resume | 50 XP |
+| Apply to Internship | 30 XP |
+| View Career Details | 5 XP |
+
+### Achievement Badges
+
+| Badge | Icon | Requirement |
+|-------|------|-------------|
+| Skill Prodigy | 🎯 | Add 5+ skills |
+| Fast Learner | ⚡ | Earn 200+ XP |
+| Career Explorer | 🔍 | View 10+ careers |
+| Go-Getter | 🚀 | Apply to 5+ internships |
+
+### Database Schema
+
+```json
+"users": {
+  "{userId}": {
+    "xp": 250,
+    "badges": ["skill_prodigy", "fast_learner"],
+    "careerViews": 12,
+    "applications": 3
+  }
+}
+```
+
+---
+
 ## 🔮 Future Enhancements
 
 1. **Push Notifications**: Real-time alerts for new internships
@@ -521,6 +566,8 @@ export default {
 6. **Skill Assessments**: Automated skill testing
 7. **Job Board**: Full-time job listings
 8. **Networking**: Connect with alumni and professionals
+9. **Leaderboards**: Compete with peers on XP
+10. **Daily Challenges**: Bonus XP for completing tasks
 
 ---
 

@@ -13,7 +13,8 @@ import colors from "../theme/colors";
 import FavoritesService from "../services/favoritesService";
 import { AIService } from "../services/aiService";
 import { auth, db } from "../services/firebaseConfig";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, update } from "firebase/database";
+import { awardXP } from "../services/gamificationService";
 
 export default function CareerDetailsScreen({ route, navigation }) {
   const { career, userSkills } = route.params;
@@ -31,6 +32,18 @@ export default function CareerDetailsScreen({ route, navigation }) {
   useEffect(() => {
     checkFavoriteStatus();
     loadUserProfile();
+    awardXP("VIEW_CAREER");
+    
+    // Track career views for badge
+    const user = auth.currentUser;
+    if (user) {
+      const userRef = ref(db, `users/${user.uid}`);
+      onValue(userRef, (snapshot) => {
+        const data = snapshot.val();
+        const careerViews = (data?.careerViews || 0) + 1;
+        update(userRef, { careerViews });
+      }, { onlyOnce: true });
+    }
   }, []);
 
   const loadUserProfile = () => {
