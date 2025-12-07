@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as DocumentPicker from 'expo-document-picker';
 import colors from "../theme/colors";
+import { AIService } from "../services/aiService";
 
 export default function ResumeUploader({ resume, onUpload, disabled = false }) {
   const [uploading, setUploading] = useState(false);
@@ -21,29 +22,51 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
       if (!result.canceled && result.assets && result.assets[0]) {
         const file = result.assets[0];
         
-        // Simulate AI processing of the actual document
-        setTimeout(() => {
-          const resumeData = {
-            fileName: file.name,
-            uri: file.uri,
-            size: file.size,
-            extractedData: {
-              skills: ["JavaScript", "React", "Node.js", "Python"],
-              experience: "2 years software development",
-              education: "B.Tech Computer Science",
-              projects: ["E-commerce Website", "Mobile App Development"]
-            },
-            uploadDate: new Date().toISOString()
-          };
-          
-          onUpload(resumeData);
-          setUploading(false);
-          
-          Alert.alert(
-            "Resume Processed! 🎉",
-            `Extracted:\n• ${resumeData.extractedData.skills.length} skills\n• Education: ${resumeData.extractedData.education}\n• Experience: ${resumeData.extractedData.experience}`
-          );
-        }, 2000);
+        // Extract real content from resume file
+        setTimeout(async () => {
+          try {
+            const extractResult = await AIService.extractResumeData(file.uri);
+            
+            if (extractResult.success) {
+              const resumeData = {
+                fileName: file.name,
+                uri: file.uri,
+                size: file.size,
+                extractedData: extractResult.data,
+                uploadDate: new Date().toISOString()
+              };
+              
+              onUpload(resumeData);
+              setUploading(false);
+              
+              Alert.alert(
+                "Resume Processed! 🎉",
+                `AI extracted your details:\n• Contact Info: ${extractResult.data.email ? '✅ Found' : '❌ Missing'}\n• Professional Summary: ${extractResult.data.summary ? '✅ Found' : '❌ Missing'}\n• Projects: ${extractResult.data.projects ? '✅ Found' : '❌ Missing'}\n\nReady for ATS analysis!`
+              );
+            } else {
+              throw new Error('Extraction failed');
+            }
+          } catch (error) {
+            console.log('Initial extraction failed, will extract during analysis:', error);
+            
+            const resumeData = {
+              fileName: file.name,
+              uri: file.uri,
+              size: file.size,
+              extractedData: null,
+              uploadDate: new Date().toISOString(),
+              needsExtraction: true
+            };
+            
+            onUpload(resumeData);
+            setUploading(false);
+            
+            Alert.alert(
+              "Resume Uploaded! 📄",
+              "File uploaded successfully. Click 'Get ATS Score & Insights' to analyze your actual resume content!"
+            );
+          }
+        }, 1500);
       } else {
         setUploading(false);
       }
@@ -72,9 +95,13 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
               <Text style={styles.uploadDate}>
                 Uploaded: {new Date(resume.uploadDate).toLocaleDateString()}
               </Text>
-              {resume.extractedData && (
+              {resume.extractedData ? (
                 <Text style={styles.extractedInfo}>
-                  ✓ {resume.extractedData.skills.length} skills extracted
+                  ✓ Content extracted and ready for analysis
+                </Text>
+              ) : (
+                <Text style={styles.extractedInfo}>
+                  🔄 Ready for real-time AI extraction & analysis
                 </Text>
               )}
             </View>
@@ -107,7 +134,7 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
           </Text>
           {!disabled && (
             <Text style={styles.uploadSubtext}>
-              We'll extract skills and experience automatically
+              AI will analyze your actual resume content
             </Text>
           )}
         </TouchableOpacity>

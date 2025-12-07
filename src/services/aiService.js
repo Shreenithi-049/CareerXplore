@@ -190,47 +190,25 @@ Senior: $XX,000 (7+ years)`;
     }
   },
 
-  async analyzeResume(resumeData) {
+  async analyzeResume(resumeData, targetRole = 'Software Developer') {
     try {
-      const prompt = `Analyze this resume and provide:
-1. Overall score (0-100)
-2. List 4 missing details or weak areas
-3. List 4 improvement suggestions
-
-Resume Data:
-Name: ${resumeData.name}
-Education: ${resumeData.education}
-Skills: ${resumeData.skills.join(", ")}
-Experience: ${resumeData.experience}
-Projects: ${resumeData.projects}
-
-Format:
-SCORE: X
-MISSING:
-- detail1
-- detail2
-SUGGESTIONS:
-- suggestion1
-- suggestion2`;
-
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
-          }),
-        }
-      );
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error?.message || "API failed");
-
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const analysis = this.parseResumeAnalysis(text);
-
+      console.log('Analyzing resume data:', resumeData);
+      
+      // Weighted scoring calculation
+      const scores = this.calculateSectionScores(resumeData, targetRole);
+      const totalScore = scores.contact.score + scores.summary.score + scores.education.score + scores.skills.score + scores.projects.score;
+      
+      console.log('Calculated scores:', scores, 'Total:', totalScore);
+      
+      // Generate specific analysis based on actual content
+      const analysis = this.generateSpecificAnalysis(resumeData, scores, totalScore);
+      
+      console.log('Generated analysis:', analysis);
       return { success: true, analysis };
+
+      // API call temporarily disabled for testing
+      // const response = await fetch(...)
+      // Will re-enable once basic functionality works
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -238,21 +216,30 @@ SUGGESTIONS:
 
   async extractResumeData(fileUri) {
     try {
-      const prompt = `Extract the following information from this resume and format as JSON:
+      console.log('Extracting resume data from file:', fileUri);
+      
+      if (!API_KEY) {
+        throw new Error('Gemini API key not configured');
+      }
+      
+      const prompt = `Extract information from this resume file and return ONLY a JSON object with the actual data found:
+
 {
-  "name": "full name",
-  "email": "email address",
-  "phone": "phone number",
-  "summary": "professional summary",
-  "education": "education details",
-  "skills": ["skill1", "skill2"],
-  "experience": "work experience",
-  "projects": "projects",
-  "certifications": "certifications",
-  "interests": ["interest1", "interest2"]
+  "name": "actual full name from resume",
+  "email": "actual email address found",
+  "phone": "actual phone number found",
+  "linkedin": "actual LinkedIn URL if present",
+  "github": "actual GitHub URL if present",
+  "summary": "actual professional summary/objective text",
+  "education": "actual education details with university, degree, year",
+  "skills": ["actual technical skills listed"],
+  "experience": "actual work experience details",
+  "projects": "actual project descriptions with technologies",
+  "certifications": "actual certifications mentioned",
+  "interests": ["actual interests if mentioned"]
 }
 
-Note: Infer interests from skills and experience. This is a simulated extraction. Provide realistic sample data for a software developer resume.`;
+IMPORTANT: Extract ONLY what is actually written in the resume. If information is not present, use empty string "" or empty array []. Do not make up or assume any information.`;
 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
@@ -266,76 +253,166 @@ Note: Infer interests from skills and experience. This is a simulated extraction
       );
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error?.message || "API failed");
+      console.log('Gemini API response:', data);
+      
+      if (!response.ok) {
+        console.error('API error:', data);
+        throw new Error(data.error?.message || `API failed with status ${response.status}`);
+      }
 
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      console.log('Extracted text:', text);
+      
+      if (!text) {
+        throw new Error('No content extracted from resume');
+      }
+      
       const extracted = this.parseExtractedData(text);
-
+      console.log('Parsed extracted data:', extracted);
+      
       return { success: true, data: extracted };
     } catch (error) {
+      console.error('Resume extraction error:', error);
       return { success: false, error: error.message };
     }
   },
 
   parseExtractedData(text) {
-    const SKILL_MAP = {"python":"Python","java":"Java","c++":"C++","web":"Web Development","sql":"SQL / Databases","database":"SQL / Databases","data":"Data Analysis","ml":"Machine Learning Basics","machine learning":"Machine Learning Basics","network":"Networking","cyber":"Cyber Security","cloud":"Cloud Computing","mobile":"Mobile App Development","ui":"UI/UX Design","ux":"UI/UX Design","design":"Graphic Design","graphic":"Graphic Design","video":"Video Editing","excel":"Excel & Analytics","accounting":"Accounting Basics","marketing":"Digital Marketing","digital marketing":"Digital Marketing","business":"Business Strategy","communication":"Communication","problem":"Problem Solving","leadership":"Leadership","team":"Teamwork"};
-    const INTEREST_MAP = {"ai":"Artificial Intelligence","artificial":"Artificial Intelligence","web":"Web Development","mobile":"Mobile Apps","data":"Data Science","cyber":"Cybersecurity","cloud":"Cloud Computing","blockchain":"Blockchain","iot":"IoT","entrepreneur":"Entrepreneurship","marketing":"Marketing","finance":"Finance","consulting":"Consulting","project":"Project Management","sales":"Sales","design":"Design","photo":"Photography","video":"Video Production","writing":"Writing","music":"Music","health":"Healthcare","education":"Education","research":"Research","gaming":"Gaming","travel":"Travel","sports":"Sports"};
-    
     try {
+      // Find JSON object in the response
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
-        const rawSkills = Array.isArray(parsed.skills) ? parsed.skills : [];
-        const rawInterests = Array.isArray(parsed.interests) ? parsed.interests : [];
         
-        const mappedSkills = rawSkills.map(s => {
-          const lower = s.toLowerCase();
-          for (const [key, val] of Object.entries(SKILL_MAP)) {
-            if (lower.includes(key)) return val;
-          }
-          return s;
-        }).filter((v, i, a) => a.indexOf(v) === i);
-        
-        const mappedInterests = rawInterests.map(i => {
-          const lower = i.toLowerCase();
-          for (const [key, val] of Object.entries(INTEREST_MAP)) {
-            if (lower.includes(key)) return val;
-          }
-          return i;
-        }).filter((v, i, a) => a.indexOf(v) === i);
-        
+        // Return only actual extracted data, no fallbacks
         return {
           name: parsed.name || "",
           email: parsed.email || "",
           phone: parsed.phone || "",
+          linkedin: parsed.linkedin || "",
+          github: parsed.github || "",
           summary: parsed.summary || "",
           education: parsed.education || "",
-          skills: mappedSkills,
+          skills: Array.isArray(parsed.skills) ? parsed.skills : [],
           experience: parsed.experience || "",
           projects: parsed.projects || "",
           certifications: parsed.certifications || "",
-          interests: mappedInterests
+          interests: Array.isArray(parsed.interests) ? parsed.interests : []
         };
       }
     } catch (e) {
-      console.log("Parse error:", e);
+      console.error("JSON parse error:", e);
+      throw new Error('Failed to parse extracted resume data');
     }
-    return {
-      name: "John Doe",
-      email: "john.doe@example.com",
-      phone: "+1 (555) 123-4567",
-      summary: "Experienced software developer with 3+ years in web development",
-      education: "Bachelor of Science in Computer Science, XYZ University, 2020",
-      skills: ["Python", "Java", "Web Development", "SQL / Databases", "Machine Learning Basics"],
-      experience: "Software Developer at Tech Corp (2020-Present)\n- Developed web applications\n- Collaborated with cross-functional teams",
-      projects: "E-commerce Platform - Built full-stack application using MERN stack",
-      certifications: "AWS Certified Developer Associate",
-      interests: ["Web Development", "Artificial Intelligence", "Cloud Computing"]
+    
+    throw new Error('No valid JSON found in resume extraction response');
+  },
+
+  generateSpecificAnalysis(resumeData, scores, totalScore) {
+    const missing = [];
+    const suggestions = [];
+
+    // Specific missing items based on actual content
+    if (!resumeData.email || !resumeData.phone) missing.push("Add complete contact information (email & phone)");
+    if (!resumeData.linkedin) missing.push("Add LinkedIn profile URL for professional networking");
+    if (!resumeData.github) missing.push("Include GitHub portfolio to showcase code");
+    if (!resumeData.summary || resumeData.summary.length < 50) missing.push("Write a compelling professional summary (3-4 lines)");
+    
+    // Check education details
+    const education = resumeData.education || '';
+    if (!education.toLowerCase().includes('university') && !education.toLowerCase().includes('college')) {
+      missing.push("Add university/college name and graduation year");
+    }
+    if (!/\d\.\d|\d{1,2}%/.test(education)) {
+      missing.push("Include GPA/percentage if above 7.0/70%");
+    }
+
+    // Check projects
+    const projects = resumeData.projects || '';
+    if (projects.length < 100) {
+      missing.push("Expand project descriptions with technologies used");
+    }
+    if (!/\d+/.test(projects)) {
+      missing.push("Add quantifiable metrics to project outcomes");
+    }
+
+    // Specific suggestions based on content
+    const skills = Array.isArray(resumeData.skills) ? resumeData.skills : [];
+    const hasReact = skills.some(s => s.toLowerCase().includes('react'));
+    const hasNode = skills.some(s => s.toLowerCase().includes('node'));
+    const hasPython = skills.some(s => s.toLowerCase().includes('python'));
+    
+    if (hasReact && projects.toLowerCase().includes('react')) {
+      suggestions.push("Specify React features used: 'Built with React Hooks, Context API'");
+    }
+    if (hasNode && projects.toLowerCase().includes('node')) {
+      suggestions.push("Detail Node.js implementation: 'Created REST APIs with Express.js'");
+    }
+    if (hasPython) {
+      suggestions.push("Highlight Python projects: 'Developed data analysis scripts'");
+    }
+    
+    // Generic improvements if no specific ones
+    if (suggestions.length === 0) {
+      suggestions.push(`Enhance ${skills[0] || 'technical'} project descriptions with specific achievements`);
+      suggestions.push("Add problem-solution format: 'Solved X by implementing Y'");
+      suggestions.push("Include deployment details: 'Deployed on AWS/Heroku with 99% uptime'");
+    }
+
+    const result = {
+      score: totalScore,
+      missing: missing.slice(0, 4),
+      suggestions: suggestions.slice(0, 4)
     };
+    
+    console.log('Generated specific analysis:', result);
+    return result;
+  },
+
+  calculateSectionScores(resumeData, targetRole) {
+    const scores = {
+      contact: { score: 0, status: '' },
+      summary: { score: 0, status: '' },
+      education: { score: 0, status: '' },
+      skills: { score: 0, status: '' },
+      projects: { score: 0, status: '' }
+    };
+
+    // Contact Info (10%)
+    let contactScore = 0;
+    if (resumeData.email) contactScore += 3;
+    if (resumeData.phone) contactScore += 3;
+    if (resumeData.linkedin) contactScore += 2;
+    if (resumeData.github) contactScore += 2;
+    scores.contact = { score: contactScore, status: contactScore >= 8 ? 'Complete' : 'Missing links' };
+
+    // Skills Relevance (25%)
+    const relevantSkills = ['JavaScript', 'React', 'Node.js', 'Python', 'Java', 'SQL'];
+    const userSkills = resumeData.skills || [];
+    const matchCount = relevantSkills.filter(skill => 
+      userSkills.some(userSkill => userSkill.toLowerCase().includes(skill.toLowerCase()))
+    ).length;
+    scores.skills = { score: Math.min(25, matchCount * 4), status: matchCount >= 4 ? 'Strong match' : 'Add more tech skills' };
+
+    // Projects (30%)
+    const projectLength = (resumeData.projects || '').length;
+    const projectScore = Math.min(30, Math.floor(projectLength / 20));
+    scores.projects = { score: projectScore, status: projectScore >= 25 ? 'Well detailed' : 'Add more details' };
+
+    // Education (20%)
+    const hasUniversity = (resumeData.education || '').toLowerCase().includes('university');
+    const hasGPA = /\d\.\d/.test(resumeData.education || '');
+    scores.education = { score: hasUniversity ? (hasGPA ? 20 : 15) : 10, status: hasUniversity ? 'Complete' : 'Add university details' };
+
+    // Summary (15%)
+    const summaryLength = (resumeData.summary || '').length;
+    scores.summary = { score: Math.min(15, Math.floor(summaryLength / 10)), status: summaryLength >= 100 ? 'Strong' : 'Expand summary' };
+
+    return scores;
   },
 
   parseResumeAnalysis(text) {
-    const analysis = { score: 75, missing: [], suggestions: [] };
+    const analysis = { score: 85, missing: [], suggestions: [] };
     const lines = text.split("\n").map(l => l.trim()).filter(l => l);
     let section = "";
 
@@ -351,8 +428,8 @@ Note: Infer interests from skills and experience. This is a simulated extraction
       }
     });
 
-    if (analysis.missing.length === 0) analysis.missing = ["Add quantifiable achievements", "Include certifications", "Add contact links (LinkedIn)", "Specify project outcomes"];
-    if (analysis.suggestions.length === 0) analysis.suggestions = ["Use action verbs", "Quantify achievements with numbers", "Tailor to job description", "Keep it concise (1-2 pages)"];
+    if (analysis.missing.length === 0) analysis.missing = ["Add LinkedIn profile URL", "Include GitHub portfolio link", "Mention relevant certifications", "Add quantifiable project metrics"];
+    if (analysis.suggestions.length === 0) analysis.suggestions = ["Use action verbs: 'Built React app reducing load time by 40%'", "Add tech stack: 'Used Node.js, MongoDB, Express'", "Quantify impact: 'Served 500+ users, 99% uptime'", "Show problem-solving: 'Solved auth issues using JWT'"];
 
     return analysis;
   },

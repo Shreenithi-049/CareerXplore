@@ -11,6 +11,8 @@ const colors = {
   grayLight: "#F3F4F6",
   grayBorder: "#D1D5D8",
   danger: "#E15B64",
+  error: "#E15B64",
+  warning: "#FF9800",
   success: "#4CAF50",
 };
 

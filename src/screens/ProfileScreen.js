@@ -18,6 +18,7 @@ import Button from "../components/Button";
 import SkillSelector from "../components/SkillSelector";
 import InterestSelector from "../components/InterestSelector";
 import ResumeUploader from "../components/ResumeUploader";
+import ResumeScoreCard from "../components/ResumeScoreCard";
 import ScreenHeader from "../components/ScreenHeader";
 import { isProfileComplete } from "../utils/profileUtils";
 import { forceProfileComplete } from "../utils/forceProfileComplete";
@@ -314,6 +315,11 @@ export default function ProfileScreen({ navigation }) {
           resume={resume}
           onUpload={setResume}
           disabled={!isEditing}
+        />
+        
+        <ResumeScoreCard 
+          resume={resume}
+          userProfile={{ fullName, education, skills, interests }}
         />
 
         {isEditing && (
