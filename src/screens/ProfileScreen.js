@@ -18,7 +18,7 @@ import Button from "../components/Button";
 import SkillSelector from "../components/SkillSelector";
 import InterestSelector from "../components/InterestSelector";
 import ResumeUploader from "../components/ResumeUploader";
-import ResumeScoreCard from "../components/ResumeScoreCard";
+
 import ScreenHeader from "../components/ScreenHeader";
 import XPProgressBar from "../components/XPProgressBar";
 import { isProfileComplete } from "../utils/profileUtils";
@@ -351,10 +351,7 @@ export default function ProfileScreen({ navigation }) {
           disabled={!isEditing}
         />
         
-        <ResumeScoreCard 
-          resume={resume}
-          userProfile={{ fullName, education, skills, interests }}
-        />
+
 
         {isEditing && (
           <View style={styles.buttonContainer}>

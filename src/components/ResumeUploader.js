@@ -22,51 +22,30 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
       if (!result.canceled && result.assets && result.assets[0]) {
         const file = result.assets[0];
         
-        // Extract real content from resume file
-        setTimeout(async () => {
-          try {
-            const extractResult = await AIService.extractResumeData(file.uri);
-            
-            if (extractResult.success) {
-              const resumeData = {
-                fileName: file.name,
-                uri: file.uri,
-                size: file.size,
-                extractedData: extractResult.data,
-                uploadDate: new Date().toISOString()
-              };
-              
-              onUpload(resumeData);
-              setUploading(false);
-              
-              Alert.alert(
-                "Resume Processed! 🎉",
-                `AI extracted your details:\n• Contact Info: ${extractResult.data.email ? '✅ Found' : '❌ Missing'}\n• Professional Summary: ${extractResult.data.summary ? '✅ Found' : '❌ Missing'}\n• Projects: ${extractResult.data.projects ? '✅ Found' : '❌ Missing'}\n\nReady for ATS analysis!`
-              );
-            } else {
-              throw new Error('Extraction failed');
-            }
-          } catch (error) {
-            console.log('Initial extraction failed, will extract during analysis:', error);
-            
-            const resumeData = {
-              fileName: file.name,
-              uri: file.uri,
-              size: file.size,
-              extractedData: null,
-              uploadDate: new Date().toISOString(),
-              needsExtraction: true
-            };
-            
-            onUpload(resumeData);
-            setUploading(false);
-            
-            Alert.alert(
-              "Resume Uploaded! 📄",
-              "File uploaded successfully. Click 'Get ATS Score & Insights' to analyze your actual resume content!"
-            );
-          }
-        }, 1500);
+        const response = await fetch(file.uri);
+        const blob = await response.blob();
+        const base64 = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(',')[1]);
+          reader.readAsDataURL(blob);
+        });
+        
+        const resumeData = {
+          fileName: file.name,
+          uri: file.uri,
+          size: file.size,
+          base64Data: base64,
+          extractedData: null,
+          uploadDate: new Date().toISOString()
+        };
+        
+        onUpload(resumeData);
+        setUploading(false);
+        
+        Alert.alert(
+          "Resume Uploaded! 📄",
+          "Your resume has been saved successfully."
+        );
       } else {
         setUploading(false);
       }
@@ -95,15 +74,9 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
               <Text style={styles.uploadDate}>
                 Uploaded: {new Date(resume.uploadDate).toLocaleDateString()}
               </Text>
-              {resume.extractedData ? (
-                <Text style={styles.extractedInfo}>
-                  ✓ Content extracted and ready for analysis
-                </Text>
-              ) : (
-                <Text style={styles.extractedInfo}>
-                  🔄 Ready for real-time AI extraction & analysis
-                </Text>
-              )}
+              <Text style={styles.extractedInfo}>
+                ✓ Resume uploaded successfully
+              </Text>
             </View>
           </View>
           
@@ -134,7 +107,7 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
           </Text>
           {!disabled && (
             <Text style={styles.uploadSubtext}>
-              AI will analyze your actual resume content
+              Upload your resume for record keeping
             </Text>
           )}
         </TouchableOpacity>

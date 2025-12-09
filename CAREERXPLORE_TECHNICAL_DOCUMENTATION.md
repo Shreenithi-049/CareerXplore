@@ -74,8 +74,9 @@ CareerXplore Platform
    - Skills selection (multi-select)
    - Interests selection
    - Education level
-   - Resume upload
+   - Resume upload (for record keeping)
    - Profile completion percentage
+   - Profile picture upload
 
 3. **Career Recommendations**
    - AI-powered career matching
@@ -127,8 +128,9 @@ App
 | `InputField.js` | Form input with validation |
 | `SkillSelector.js` | Multi-select skill picker |
 | `InterestSelector.js` | Interest selection UI |
-| `ResumeUploader.js` | Document upload handler |
+| `ResumeUploader.js` | Resume upload handler |
 | `TrackerWidget.js` | Application status widget |
+| `XPProgressBar.js` | XP and level progress display |
 | `ProfileNotification.js` | Profile completion alerts |
 | `ProgressBar.js` | Visual progress indicator |
 | `GamificationCard.js` | XP, badges, and progress display |
@@ -255,11 +257,19 @@ if (snapshot.val().role !== 'admin') {
 
 ## 🤖 AI Integration
 
-### Gemini API Implementation with Structured Output
+### Gemini API Usage
+
+The app uses **Gemini 2.5 Flash** model for AI-powered features:
+- Career insights generation
+- Skill gap analysis
+- Course recommendations
+- Career roadmap creation
+
+### Career Insights Generation
 
 ```javascript
 // AI Service for Career Insights
-const API_KEY = process.env.GEMINI_API_KEY;
+const API_KEY = Constants.expoConfig?.extra?.GEMINI_API_KEY;
 
 async function generateCareerInsights(userProfile, career) {
   const prompt = `Given this user profile:
@@ -320,12 +330,26 @@ parseJSONInsights(text) {
 }
 ```
 
-### Benefits of Structured JSON Output
+### AI Features
 
-- **Eliminates parsing issues**: No more regex-based text parsing
-- **Consistent format**: Always returns predictable structure
-- **Error resilient**: Fallback values if JSON parsing fails
-- **Type safe**: Arrays and strings are properly typed
+1. **Career Insights**
+   - Why a career matches user profile
+   - Skill gaps identification
+   - Course recommendations
+   - Future scope analysis
+
+2. **Career Roadmap**
+   - Learning path (Beginner → Intermediate → Advanced)
+   - Recommended resources
+   - Time estimates
+   - Salary growth projections
+
+### Benefits of JSON-based AI Responses
+
+- **Consistent format**: Predictable structure for parsing
+- **Error resilient**: Fallback values if parsing fails
+- **Type safe**: Arrays and strings properly typed
+- **Easy to extend**: Add new fields without breaking existing code
 
 ---
 

@@ -9,7 +9,7 @@ const API_KEY = Constants.expoConfig?.extra?.GEMINI_API_KEY;
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'bot', text: 'Hi! I\'m here to help. Ask me anything about careers, internships, or using the app!' }
+    { role: 'bot', text: '👋 Hi! I\'m your CareerXplore AI assistant. Ask me anything about careers, internships, or how to use the app!' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -78,8 +78,13 @@ export default function ChatbotWidget() {
         <View style={styles.modalOverlay}>
           <View style={styles.chatContainer}>
             <View style={styles.header}>
-              <Text style={styles.headerTitle}>Career Assistant</Text>
-              <TouchableOpacity onPress={() => setIsOpen(false)}>
+              <View style={styles.headerLeft}>
+                <View style={styles.aiIconContainer}>
+                  <MaterialIcons name="auto-awesome" size={20} color="#9333EA" />
+                </View>
+                <Text style={styles.headerTitle}>AI Assistant</Text>
+              </View>
+              <TouchableOpacity onPress={() => setIsOpen(false)} style={styles.closeButton}>
                 <MaterialIcons name="close" size={24} color={colors.textDark} />
               </TouchableOpacity>
             </View>
@@ -120,7 +125,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.accent,
+    backgroundColor: '#9333EA',
     opacity: 0.3,
     zIndex: 999,
   },
@@ -131,11 +136,11 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.accent,
+    backgroundColor: '#9333EA',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 8,
-    shadowColor: colors.accent,
+    shadowColor: '#9333EA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.5,
     shadowRadius: 12,
@@ -147,7 +152,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   chatContainer: {
-    backgroundColor: colors.background,
+    backgroundColor: '#F5F3FF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     height: '80%',
@@ -158,13 +163,30 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: colors.grayBorder,
+    borderBottomColor: '#E9D5FF',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  aiIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F5F3FF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.primary,
+    color: '#9333EA',
+  },
+  closeButton: {
+    padding: 4,
   },
   messagesContainer: {
     flex: 1,
@@ -177,13 +199,13 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
   },
   botMessage: {
-    backgroundColor: colors.card,
+    backgroundColor: colors.white,
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderColor: colors.grayBorder,
+    borderColor: '#E9D5FF',
   },
   userMessage: {
-    backgroundColor: colors.accent,
+    backgroundColor: '#9333EA',
     alignSelf: 'flex-end',
   },
   messageText: {
@@ -219,7 +241,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.accent,
+    backgroundColor: '#9333EA',
     justifyContent: 'center',
     alignItems: 'center',
   },
