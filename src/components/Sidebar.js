@@ -118,10 +118,11 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     borderRadius: 10,
     marginBottom: 10,
+    minHeight: 48,
   },
   menuItemActive: {
     backgroundColor: "rgba(200,169,81,0.15)",
@@ -142,10 +143,11 @@ const styles = StyleSheet.create({
   logoutItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 9,
-    paddingHorizontal: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     borderRadius: 6,
     marginTop: 10,
+    minHeight: 48,
   },
   logoutText: {
     color: colors.danger,

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Animated } from 'react-native';
+import { useResponsive } from '../utils/useResponsive';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ref, onValue } from 'firebase/database';
 import { auth, db } from '../services/firebaseConfig';
@@ -52,6 +53,7 @@ const CircularProgress = ({ percentage, size = 120, strokeWidth = 10, color = co
 export default function AnalyticsScreen() {
   const [userData, setUserData] = useState(null);
   const [fadeAnim] = useState(new Animated.Value(0));
+  const { isMobile } = useResponsive();
 
   useEffect(() => {
     const userRef = ref(db, `users/${auth.currentUser.uid}`);
@@ -77,12 +79,12 @@ export default function AnalyticsScreen() {
   const appProgress = Math.min((applications / 10) * 100, 100);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, isMobile && styles.containerMobile]}>
       <ScreenHeader title="Analytics" subtitle="Track your progress" />
 
       <Animated.View style={{ opacity: fadeAnim }}>
         {/* Stats Grid */}
-        <View style={styles.statsGrid}>
+        <View style={[styles.statsGrid, isMobile && styles.statsGridMobile]}>
           <View style={styles.statBox}>
             <View style={styles.iconContainer}>
               <MaterialIcons name="bolt" size={28} color={colors.accent} />
@@ -149,11 +151,18 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  containerMobile: {
+    padding: 12,
+  },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
     marginBottom: 24,
+    justifyContent: 'space-between',
+  },
+  statsGridMobile: {
+    flexDirection: 'column',
   },
   statBox: {
     flex: 1,

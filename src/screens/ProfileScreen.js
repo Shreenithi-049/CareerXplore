@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
+import { useResponsive } from "../utils/useResponsive";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
 import colors from "../theme/colors";
@@ -38,6 +39,7 @@ export default function ProfileScreen({ navigation }) {
   const [showResumeUpload, setShowResumeUpload] = useState(false);
   const [xp, setXp] = useState(0);
   const [badges, setBadges] = useState([]);
+  const { isMobile } = useResponsive();
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -215,7 +217,7 @@ export default function ProfileScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isMobile && styles.containerMobile]}>
       <ScreenHeader title="Profile" subtitle="Manage your personal information and skills" />
       
       <View style={styles.profileContent}>
@@ -354,7 +356,7 @@ export default function ProfileScreen({ navigation }) {
 
 
         {isEditing && (
-          <View style={styles.buttonContainer}>
+          <View style={[styles.buttonContainer, isMobile && styles.buttonContainerMobile]}>
             <Button 
               title="Cancel" 
               onPress={handleCancel}
@@ -378,6 +380,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 20,
+  },
+  containerMobile: {
+    paddingTop: 12,
   },
   profileContent: {
     flex: 1,
@@ -423,6 +428,10 @@ const styles = StyleSheet.create({
     alignItems: "stretch",
     gap: 12,
     marginTop: 20,
+  },
+  buttonContainerMobile: {
+    flexDirection: "column",
+    gap: 10,
   },
   cancelButton: {
     backgroundColor: colors.grayLight,
@@ -512,10 +521,12 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     backgroundColor: colors.accent,
-    padding: 12,
+    padding: 14,
     borderRadius: 8,
     marginBottom: 10,
     alignItems: "center",
+    minHeight: 48,
+    justifyContent: "center",
   },
   modalButtonText: {
     color: colors.white,
@@ -529,15 +540,18 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 12,
     marginTop: 8,
+    justifyContent: "flex-start",
   },
   badge: {
     backgroundColor: colors.card,
     borderRadius: 12,
-    padding: 12,
+    padding: 14,
     alignItems: "center",
     borderWidth: 1,
     borderColor: colors.grayBorder,
-    minWidth: 80,
+    minWidth: 90,
+    minHeight: 90,
+    justifyContent: "center",
   },
   badgeIcon: {
     fontSize: 32,

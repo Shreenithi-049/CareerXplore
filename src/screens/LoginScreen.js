@@ -7,16 +7,19 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  ScrollView,
 } from "react-native";
 import colors from "../theme/colors";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
 import { auth } from "../services/firebaseConfig";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { useResponsive } from "../utils/useResponsive";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { isMobile, isDesktop } = useResponsive();
 
   const handleLogin = () => {
     if (!email || !password) {
@@ -34,6 +37,10 @@ export default function LoginScreen({ navigation }) {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
+      <ScrollView 
+        contentContainerStyle={[styles.scrollContent, isDesktop && styles.scrollContentDesktop]}
+        keyboardShouldPersistTaps="handled"
+      >
       <View style={styles.logoContainer}>
         <Image
           source={require("../../assets/CareerXplore_logo_alone.png")}
@@ -68,6 +75,7 @@ export default function LoginScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
       </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
@@ -76,9 +84,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
+  },
+  scrollContent: {
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
+  },
+  scrollContentDesktop: {
+    maxWidth: 500,
+    alignSelf: 'center',
+    width: '100%',
   },
   logoContainer: {
     alignItems: "center",
@@ -103,6 +119,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: "100%",
+    maxWidth: 450,
     padding: 20,
     backgroundColor: "#FAFAFA",
     borderRadius: 20,

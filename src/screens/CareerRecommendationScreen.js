@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Platform,
 } from "react-native";
+import { useResponsive } from "../utils/useResponsive";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../theme/colors";
 import { auth, db } from "../services/firebaseConfig";
@@ -166,6 +167,7 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
   const [hoveredId, setHoveredId] = useState(null);
   const [profileComplete, setProfileComplete] = useState(false);
   const [favoritedCareers, setFavoritedCareers] = useState([]);
+  const { isMobile, isTablet, isDesktop } = useResponsive();
 
   // Load user profile data from Firebase
   useEffect(() => {
@@ -265,7 +267,7 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isMobile && styles.containerMobile]}>
       <ScreenHeader title="Career Recommendations" subtitle="Discover careers that match your skills" />
       {!profileComplete && (
         <ProfileNotification onNavigateToProfile={() => setActivePage && setActivePage('Profile')} />
@@ -273,7 +275,7 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
       {/* Search */}
       <View style={styles.searchWrapper}>
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, isMobile && styles.searchInputMobile]}
           placeholder="Search career role"
           placeholderTextColor={colors.textLight}
           value={search}
@@ -292,6 +294,7 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
             key={cat}
             style={[
               styles.chip,
+              isMobile && styles.chipMobile,
               activeCategory === cat && styles.chipActive,
             ]}
             onPress={() => setActiveCategory(cat)}
@@ -322,7 +325,7 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
                 onPress={() => handleOpenDetails(career)}
                 style={[
                   styles.card,
-                  isWeb ? styles.cardWeb : styles.cardMobile,
+                  isMobile ? styles.cardMobile : isTablet ? styles.cardTablet : styles.cardDesktop,
                   hoveredId === career.id && styles.cardHovered,
                 ]}
                 {...(isWeb && {
@@ -373,6 +376,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  containerMobile: {
+    padding: 12,
+  },
   searchWrapper: {
     marginBottom: 8,
   },
@@ -385,6 +391,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 13,
     color: colors.textDark,
+  },
+  searchInputMobile: {
+    paddingVertical: 14,
+    fontSize: 16,
+    minHeight: 48,
   },
   chipRow: {
     marginTop: 4,
@@ -401,6 +412,11 @@ const styles = StyleSheet.create({
     height: 36,
     justifyContent: "center",
     alignItems: "center",
+  },
+  chipMobile: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    height: 44,
   },
   chipActive: {
     backgroundColor: colors.primary,
@@ -420,7 +436,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 16,
+    justifyContent: "space-between",
   },
 
   card: {
@@ -435,14 +451,17 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
     position: "relative",
-  },
-  cardWeb: {
-    flex: 1,
-    minWidth: 280,
-    maxWidth: "calc(33.333% - 11px)",
+    marginBottom: 16,
   },
   cardMobile: {
     width: "100%",
+    padding: 14,
+  },
+  cardTablet: {
+    width: "48%",
+  },
+  cardDesktop: {
+    width: "32%",
   },
   cardHovered: {
     shadowColor: colors.accent,
@@ -476,7 +495,11 @@ const styles = StyleSheet.create({
     bottom: 5,
     right: 20,
     zIndex: 1,
-    padding: 4,
+    padding: 8,
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: "center",
+    alignItems: "center",
   },
   matchBadge: {
     position: "absolute",

@@ -8,10 +8,12 @@ import GamificationCard from "../components/GamificationCard";
 import DailyXPCard from "../components/DailyXPCard";
 import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue } from "firebase/database";
+import { useResponsive } from "../utils/useResponsive";
 
 export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePage }) {
   const [fullName, setFullName] = useState("");
   const [dailyXP, setDailyXP] = useState(0);
+  const { isMobile, isTablet, isDesktop } = useResponsive();
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -28,7 +30,7 @@ export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePa
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isMobile && styles.containerMobile, isDesktop && styles.containerDesktop]}>
       <ScreenHeader 
         style={styles.logoTitle}
         title="CareerXplore" 
@@ -43,7 +45,7 @@ export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePa
           onNavigateToProfile={() => setActivePage('Profile')}
         />
         
-        <Text style={styles.greeting}>
+        <Text style={[styles.greeting, isMobile && styles.greetingMobile]}>
           Hello, {fullName || "User"}! 👋
         </Text>
         
@@ -85,6 +87,14 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  containerMobile: {
+    padding: 12,
+  },
+  containerDesktop: {
+    maxWidth: 1200,
+    alignSelf: 'center',
+    width: '100%',
+  },
   greeting: {
     fontSize: 20,
     fontWeight: "600",
@@ -93,6 +103,10 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(200,169,81,0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
+  },
+  greetingMobile: {
+    fontSize: 18,
+    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,

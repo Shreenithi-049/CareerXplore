@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
+import { useResponsive } from "../utils/useResponsive";
 import { MaterialIcons } from "@expo/vector-icons";
 import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue } from "firebase/database";
@@ -32,6 +33,7 @@ export default function InternshipScreen({ navigation, setActivePage }) {
   const [profileComplete, setProfileComplete] = useState(false);
   const [lastProfileUpdate, setLastProfileUpdate] = useState(null);
   const [favoritedInternships, setFavoritedInternships] = useState([]);
+  const { isMobile } = useResponsive();
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -185,7 +187,7 @@ export default function InternshipScreen({ navigation, setActivePage }) {
   const list = getDisplayedList();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isMobile && styles.containerMobile]}>
       <ScreenHeader title="Internships" subtitle="Live opportunities from multiple sources" />
       {!profileComplete && (
         <ProfileNotification onNavigateToProfile={() => setActivePage && setActivePage('Profile')} />
@@ -194,14 +196,14 @@ export default function InternshipScreen({ navigation, setActivePage }) {
       {/* Search + Filter row */}
       <View style={styles.topRow}>
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, isMobile && styles.searchInputMobile]}
           placeholder="Search title, company, location"
           placeholderTextColor={colors.textLight}
           value={search}
           onChangeText={handleSearch}
         />
         
-        <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+        <TouchableOpacity style={[styles.refreshButton, isMobile && styles.refreshButtonMobile]} onPress={onRefresh}>
           <MaterialIcons name="refresh" size={20} color={colors.primary} />
         </TouchableOpacity>
       </View>
@@ -210,6 +212,7 @@ export default function InternshipScreen({ navigation, setActivePage }) {
         <TouchableOpacity
           style={[
             styles.filterChip,
+            isMobile && styles.filterChipMobile,
             filterMode === "recommended" && styles.filterChipActive,
           ]}
           onPress={() => handleFilterChange("recommended")}
@@ -227,6 +230,7 @@ export default function InternshipScreen({ navigation, setActivePage }) {
         <TouchableOpacity
           style={[
             styles.filterChip,
+            isMobile && styles.filterChipMobile,
             filterMode === "all" && styles.filterChipActive,
           ]}
           onPress={() => handleFilterChange("all")}
@@ -244,6 +248,7 @@ export default function InternshipScreen({ navigation, setActivePage }) {
         <TouchableOpacity
           style={[
             styles.filterChip,
+            isMobile && styles.filterChipMobile,
             filterMode === "favorites" && styles.filterChipActive,
           ]}
           onPress={() => handleFilterChange("favorites")}
@@ -350,6 +355,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  containerMobile: {
+    padding: 12,
+  },
   topRow: {
     flexDirection: "row",
     marginBottom: 10,
@@ -366,12 +374,25 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     fontSize: 13,
   },
+  searchInputMobile: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    fontSize: 16,
+    minHeight: 48,
+  },
   refreshButton: {
     padding: 8,
     borderRadius: 8,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.grayBorder,
+  },
+  refreshButtonMobile: {
+    padding: 12,
+    minWidth: 48,
+    minHeight: 48,
+    justifyContent: "center",
+    alignItems: "center",
   },
   filterRow: {
     flexDirection: "row",
@@ -384,6 +405,11 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
+  },
+  filterChipMobile: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    minHeight: 44,
   },
   filterChipActive: {
     backgroundColor: colors.primary,
@@ -493,12 +519,12 @@ const styles = StyleSheet.create({
   },
   skillTag: {
     backgroundColor: colors.primary + "15",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 12,
   },
   skillText: {
-    fontSize: 10,
+    fontSize: 11,
     color: colors.primary,
     fontWeight: "500",
   },

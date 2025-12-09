@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Modal, TouchableOpacity } from "react-native";
 import Sidebar from "../components/Sidebar";
 import HomeScreen from "../screens/HomeScreen";
 import CareerRecommendationScreen from "../screens/CareerRecommendationScreen";
@@ -9,10 +9,12 @@ import ApplicationTrackerScreen from "../screens/ApplicationTrackerScreen";
 import AnalyticsScreen from "../screens/AnalyticsScreen";
 import ChatbotWidget from "../components/ChatbotWidget";
 import colors from "../theme/colors";
+import { useResponsive } from "../utils/useResponsive";
 
 export default function DashboardShell({ navigation }) {
   const [activePage, setActivePage] = useState("Dashboard");
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const { isMobile } = useResponsive();
 
   const renderContent = () => {
     const commonProps = {
@@ -44,13 +46,37 @@ export default function DashboardShell({ navigation }) {
 
   return (
     <View style={styles.container}>
-      {showSidebar && (
-        <Sidebar 
-          activePage={activePage} 
-          setActivePage={setActivePage} 
-          navigation={navigation}
-          onClose={() => setSidebarVisible(false)}
-        />
+      {isMobile ? (
+        <Modal
+          visible={showSidebar}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setSidebarVisible(false)}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay} 
+            activeOpacity={1}
+            onPress={() => setSidebarVisible(false)}
+          >
+            <View style={styles.sidebarModal}>
+              <Sidebar 
+                activePage={activePage} 
+                setActivePage={setActivePage} 
+                navigation={navigation}
+                onClose={() => setSidebarVisible(false)}
+              />
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      ) : (
+        showSidebar && (
+          <Sidebar 
+            activePage={activePage} 
+            setActivePage={setActivePage} 
+            navigation={navigation}
+            onClose={() => setSidebarVisible(false)}
+          />
+        )
       )}
       <View style={styles.content}>
         {renderContent()}
@@ -68,5 +94,15 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  sidebarModal: {
+    width: '80%',
+    maxWidth: 300,
+    height: '100%',
+    backgroundColor: colors.white,
   },
 });

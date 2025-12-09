@@ -22,8 +22,8 @@ CareerXplore Platform
 
 | Component | Technology | Version |
 |-----------|-----------|---------|
-| **Student App** | React Native | 0.76.3 |
-| **Student Framework** | Expo | ~54.0.0 |
+| **Student App** | React Native | 0.74.5 |
+| **Student Framework** | Expo | ~51.0.0 |
 | **Admin Dashboard** | React | 18.2.0 |
 | **UI Library (Admin)** | Material UI | 5.15.0 |
 | **Backend** | Firebase Realtime Database | 10.12.0 |
@@ -1208,7 +1208,108 @@ const CircularProgress = ({ percentage, size = 120, strokeWidth = 10, color }) =
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: 2024  
-**Platform**: Cross-platform (iOS, Android, Web)  
+## 📱 Responsive Design
+
+### Breakpoints
+- **Mobile**: < 768px (1 column layout)
+- **Tablet**: 768-1024px (2 column layout)
+- **Desktop**: > 1024px (3 column layout, max-width 1200px)
+
+### Touch Targets
+- All buttons: 44-48px minimum (Apple/Google standards)
+- Input fields: 48px minimum height
+- Font size: 16px in inputs (prevents iOS zoom)
+
+### Responsive Components
+```javascript
+import { useResponsive } from '../utils/useResponsive';
+
+const { isMobile, isTablet, isDesktop } = useResponsive();
+```
+
+### Mobile Optimizations
+- Hamburger menu modal on mobile
+- Stacked button layouts
+- Reduced padding (20px → 12px)
+- Single column grids
+- Larger touch targets
+
+---
+
+## 🌐 Deployment
+
+### Mobile (Android)
+```bash
+eas build -p android --profile preview
+```
+**Output**: APK file for Android devices
+**Download**: https://expo.dev/artifacts/eas/9gJQ2R3maDa1b8gjGb8qu5.apk
+
+### Web (PC/Browser)
+```bash
+npx expo export -p web
+```
+**Output**: `dist` folder with static web app
+
+**Deploy Options:**
+1. **Netlify**: Drag `dist` folder to https://app.netlify.com/drop
+2. **Vercel**: `vercel --prod`
+3. **GitHub Pages**: `gh-pages -d dist`
+
+### Environment Setup
+```javascript
+// app.config.js
+export default {
+  expo: {
+    extra: {
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+      eas: {
+        projectId: "46230aea-bdfa-4517-9dd7-e56af8f14974"
+      }
+    }
+  }
+};
+```
+
+---
+
+## 📦 Build Configuration
+
+### EAS Build (eas.json)
+```json
+{
+  "build": {
+    "preview": {
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "apk"
+      }
+    }
+  }
+}
+```
+
+### Web Deployment (netlify.toml)
+```toml
+[build]
+  command = "npx expo export -p web"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+
+---
+
+**Version**: 1.1.0  
+**Last Updated**: January 2025  
+**Platform**: Cross-platform (Android, iOS, Web, Desktop)  
+**Status**: Production Ready ✅  
 **License**: Proprietary

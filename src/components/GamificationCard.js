@@ -5,11 +5,13 @@ import { ref, onValue } from "firebase/database";
 import colors from "../theme/colors";
 import ProgressBar from "./ProgressBar";
 import { getProfileProgress, BADGES, getBadgeDetails } from "../services/gamificationService";
+import { useResponsive } from "../utils/useResponsive";
 
 export default function GamificationCard() {
   const [xp, setXp] = useState(0);
   const [badges, setBadges] = useState([]);
   const [progress, setProgress] = useState(0);
+  const { isMobile } = useResponsive();
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -29,7 +31,7 @@ export default function GamificationCard() {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isMobile && styles.containerMobile]}>
       <Text style={styles.title}>Your Progress</Text>
       
       <View style={styles.xpSection}>
@@ -67,6 +69,10 @@ const styles = StyleSheet.create({
     marginVertical: 12,
     borderWidth: 1,
     borderColor: colors.grayBorder,
+  },
+  containerMobile: {
+    padding: 12,
+    marginVertical: 8,
   },
   title: {
     fontSize: 18,
@@ -108,10 +114,10 @@ const styles = StyleSheet.create({
   badge: {
     alignItems: "center",
     marginRight: 12,
-    padding: 8,
+    padding: 12,
     backgroundColor: colors.grayLight,
     borderRadius: 8,
-    minWidth: 70,
+    minWidth: 80,
   },
   badgeLocked: {
     opacity: 0.4,

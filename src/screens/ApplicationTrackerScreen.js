@@ -10,6 +10,7 @@ import {
   Modal,
   Alert
 } from "react-native";
+import { useResponsive } from "../utils/useResponsive";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../theme/colors";
 import ScreenHeader from "../components/ScreenHeader";
@@ -34,6 +35,7 @@ export default function ApplicationTrackerScreen() {
   const [showModal, setShowModal] = useState(false);
   const [notes, setNotes] = useState("");
   const [deadline, setDeadline] = useState("");
+  const { isMobile } = useResponsive();
 
   useEffect(() => {
     const unsubscribe = ApplicationTrackerService.listenToApplications((apps) => {
@@ -105,13 +107,13 @@ export default function ApplicationTrackerScreen() {
   const filteredApps = getFilteredApps();
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isMobile && styles.containerMobile]}>
       <ScreenHeader title="Application Tracker" subtitle="Track your internship journey" />
 
       {/* Stats Overview */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsRow}>
         <TouchableOpacity
-          style={[styles.statCard, filterStatus === "all" && styles.statCardActive]}
+          style={[styles.statCard, isMobile && styles.statCardMobile, filterStatus === "all" && styles.statCardActive]}
           onPress={() => setFilterStatus("all")}
         >
           <Text style={styles.statNumber}>{applications.length}</Text>
@@ -120,7 +122,7 @@ export default function ApplicationTrackerScreen() {
         {STATUSES.map(status => (
           <TouchableOpacity
             key={status}
-            style={[styles.statCard, filterStatus === status && styles.statCardActive]}
+            style={[styles.statCard, isMobile && styles.statCardMobile, filterStatus === status && styles.statCardActive]}
             onPress={() => setFilterStatus(status)}
           >
             <MaterialIcons name={STATUS_CONFIG[status].icon} size={20} color={STATUS_CONFIG[status].color} />
@@ -153,7 +155,7 @@ export default function ApplicationTrackerScreen() {
                   return (
                     <TouchableOpacity
                       key={status}
-                      style={styles.timelineItem}
+                      style={[styles.timelineItem, isMobile && styles.timelineItemMobile]}
                       onPress={() => handleStatusChange(app.id, status)}
                     >
                       <View style={[styles.timelineDot, isActive && styles.timelineDotActive, isCurrent && styles.timelineDotCurrent]}>
@@ -257,6 +259,7 @@ export default function ApplicationTrackerScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
+  containerMobile: { padding: 12 },
   statsRow: { flexDirection: "row", marginBottom: 16, maxHeight: 90 },
   statCard: {
     backgroundColor: colors.card,
@@ -267,6 +270,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: colors.grayBorder
+  },
+  statCardMobile: {
+    minWidth: 90,
+    padding: 14,
   },
   statCardActive: { borderColor: colors.primary, borderWidth: 2 },
   statNumber: { fontSize: 18, fontWeight: "700", color: colors.text, marginTop: 4 },
@@ -296,6 +303,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     zIndex: 2
   },
+  timelineItemMobile: {
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: "center",
+  },
   timelineDotActive: { backgroundColor: colors.primary },
   timelineDotCurrent: { backgroundColor: colors.accent, transform: [{ scale: 1.1 }] },
   timelineLine: {
@@ -314,9 +326,9 @@ const styles = StyleSheet.create({
   deadlineContainer: { flexDirection: "row", alignItems: "center", gap: 4 },
   deadlineText: { fontSize: 11, color: "#F59E0B", fontWeight: "500" },
   actionButtons: { flexDirection: "row", justifyContent: "space-between", marginTop: 8, gap: 8 },
-  detailsButton: { flexDirection: "row", alignItems: "center", gap: 4, flex: 1 },
+  detailsButton: { flexDirection: "row", alignItems: "center", gap: 4, flex: 1, minHeight: 44, paddingVertical: 8 },
   detailsButtonText: { fontSize: 12, color: colors.primary, fontWeight: "500" },
-  deleteButtonNew: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8 },
+  deleteButtonNew: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 8, minHeight: 44, paddingVertical: 8 },
   deleteButtonText: { fontSize: 12, color: "#EF4444", fontWeight: "500" },
   noData: { textAlign: "center", color: colors.textLight, marginTop: 40, fontSize: 14 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
