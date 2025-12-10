@@ -20,7 +20,7 @@ import FavoritesService from "../services/favoritesService";
 
 const isWeb = Platform.OS === "web";
 
-// Master career dataset with details + tags
+// ---------------- CAREER DATA ----------------
 const CAREERS = [
   {
     id: 1,
@@ -29,10 +29,20 @@ const CAREERS = [
     requiredSkills: ["Python", "Java", "C++", "Web Development"],
     tags: ["#Tech", "#Software", "#FullStack"],
     salary: "₹4L – ₹12L per year (entry to mid level)",
-    description: "Software Developers build and maintain applications for web, desktop, or mobile platforms.",
-    roles: ["Design, code, and test software applications", "Fix bugs and improve performance", "Collaborate with designers, testers, and product teams"],
-    futureScope: "Very high demand with opportunities in product companies, startups, and service industries.",
-    learningPath: ["Strengthen Data Structures & Algorithms", "Practice building full-stack projects", "Learn version control (Git) and basic DevOps concepts"],
+    description:
+      "Software Developers build and maintain applications for web, desktop, or mobile platforms.",
+    roles: [
+      "Design, code, and test software applications",
+      "Fix bugs and improve performance",
+      "Collaborate with designers, testers, and product teams",
+    ],
+    futureScope:
+      "Very high demand with opportunities in product companies, startups, and service industries.",
+    learningPath: [
+      "Strengthen Data Structures & Algorithms",
+      "Practice building full-stack projects",
+      "Learn version control (Git) and basic DevOps concepts",
+    ],
   },
   {
     id: 2,
@@ -41,10 +51,16 @@ const CAREERS = [
     requiredSkills: ["Data Analysis", "Python", "Machine Learning", "SQL / Databases"],
     tags: ["#Data", "#AI", "#ML"],
     salary: "₹6L – ₹15L per year",
-    description: "Data Scientists extract insights from complex data using statistical methods and machine learning.",
+    description:
+      "Data Scientists extract insights from complex data using statistical methods and machine learning.",
     roles: ["Build predictive models", "Analyze large datasets", "Present findings to stakeholders"],
-    futureScope: "Extremely high demand across all industries with AI/ML growth.",
-    learningPath: ["Master Python and R", "Learn statistics and ML algorithms", "Practice with real datasets"],
+    futureScope:
+      "Extremely high demand across all industries with AI/ML growth.",
+    learningPath: [
+      "Master Python and R",
+      "Learn statistics and ML algorithms",
+      "Practice with real datasets",
+    ],
   },
   {
     id: 3,
@@ -65,7 +81,8 @@ const CAREERS = [
     requiredSkills: ["Finance", "Excel & Analytics", "Accounting"],
     tags: ["#Finance", "#Analysis", "#Investment"],
     salary: "₹4L – ₹10L per year",
-    description: "Financial Analysts evaluate investment opportunities and financial performance.",
+    description:
+      "Financial Analysts evaluate investment opportunities and financial performance.",
     roles: ["Analyze financial data", "Create financial models", "Prepare investment reports"],
     futureScope: "Stable demand in banking, investment, and corporate sectors.",
     learningPath: ["Master Excel and financial modeling", "Learn accounting principles", "Understand market analysis"],
@@ -77,9 +94,11 @@ const CAREERS = [
     requiredSkills: ["Mechanical Engineering", "CAD Design", "Manufacturing"],
     tags: ["#Engineering", "#Design", "#Manufacturing"],
     salary: "₹3.5L – ₹9L per year",
-    description: "Mechanical Engineers design and develop mechanical systems and products.",
+    description:
+      "Mechanical Engineers design and develop mechanical systems and products.",
     roles: ["Design mechanical components", "Oversee manufacturing processes", "Test and improve products"],
-    futureScope: "Consistent demand in automotive, aerospace, and manufacturing industries.",
+    futureScope:
+      "Consistent demand in automotive, aerospace, and manufacturing industries.",
     learningPath: ["Master CAD software", "Learn manufacturing processes", "Understand materials science"],
   },
   {
@@ -89,9 +108,11 @@ const CAREERS = [
     requiredSkills: ["Content Creation", "Writing", "SEO"],
     tags: ["#Writing", "#Content", "#SEO"],
     salary: "₹2.5L – ₹6L per year",
-    description: "Content Writers create engaging written content for websites, blogs, and marketing materials.",
+    description:
+      "Content Writers create engaging written content for websites, blogs, and marketing materials.",
     roles: ["Write blog posts and articles", "Create marketing copy", "Optimize content for SEO"],
-    futureScope: "High demand with growth of digital content and online businesses.",
+    futureScope:
+      "High demand with growth of digital content and online businesses.",
     learningPath: ["Improve writing skills", "Learn SEO basics", "Build a content portfolio"],
   },
   {
@@ -104,7 +125,11 @@ const CAREERS = [
     description: "Graphic Designers create visual content for print and digital media.",
     roles: ["Design logos and branding", "Create marketing materials", "Develop visual concepts"],
     futureScope: "Steady demand across advertising, media, and digital industries.",
-    learningPath: ["Master design software (Photoshop, Illustrator)", "Study design principles", "Build a strong portfolio"],
+    learningPath: [
+      "Master design software (Photoshop, Illustrator)",
+      "Study design principles",
+      "Build a strong portfolio",
+    ],
   },
   {
     id: 8,
@@ -113,9 +138,11 @@ const CAREERS = [
     requiredSkills: ["Human Resources", "Communication", "Psychology"],
     tags: ["#HR", "#People", "#Management"],
     salary: "₹3L – ₹8L per year",
-    description: "HR Specialists manage employee relations, recruitment, and organizational development.",
+    description:
+      "HR Specialists manage employee relations, recruitment, and organizational development.",
     roles: ["Recruit and hire employees", "Manage employee relations", "Develop HR policies"],
-    futureScope: "Essential role in all organizations with focus on employee experience.",
+    futureScope:
+      "Essential role in all organizations with focus on employee experience.",
     learningPath: ["Learn HR best practices", "Understand employment law", "Develop interpersonal skills"],
   },
   {
@@ -125,9 +152,11 @@ const CAREERS = [
     requiredSkills: ["Sales", "Communication", "Customer Service"],
     tags: ["#Sales", "#Business", "#Customer"],
     salary: "₹3L – ₹10L per year (with incentives)",
-    description: "Sales Representatives sell products or services to customers and build client relationships.",
+    description:
+      "Sales Representatives sell products or services to customers and build client relationships.",
     roles: ["Generate leads and prospects", "Present products to clients", "Close sales deals"],
-    futureScope: "Always in demand across all industries with good earning potential.",
+    futureScope:
+      "Always in demand across all industries with good earning potential.",
     learningPath: ["Develop communication skills", "Learn sales techniques", "Understand customer psychology"],
   },
   {
@@ -137,10 +166,16 @@ const CAREERS = [
     requiredSkills: ["Project Management", "Leadership", "Communication"],
     tags: ["#Management", "#Leadership", "#Planning"],
     salary: "₹5L – ₹12L per year",
-    description: "Project Managers plan, execute, and oversee projects from initiation to completion.",
+    description:
+      "Project Managers plan, execute, and oversee projects from initiation to completion.",
     roles: ["Plan project timelines", "Coordinate team activities", "Manage project budgets"],
-    futureScope: "High demand across all industries as organizations focus on efficient project delivery.",
-    learningPath: ["Learn project management methodologies", "Develop leadership skills", "Get PMP certification"],
+    futureScope:
+      "High demand across all industries as organizations focus on efficient project delivery.",
+    learningPath: [
+      "Learn project management methodologies",
+      "Develop leadership skills",
+      "Get PMP certification",
+    ],
   },
 ];
 
@@ -159,7 +194,12 @@ const CATEGORIES = [
   "Management",
 ];
 
-export default function CareerRecommendationScreen({ navigation, setActivePage }) {
+export default function CareerRecommendationScreen({
+  navigation,
+  setActivePage,
+  showHamburger,
+  onToggleSidebar,
+}) {
   const [userSkills, setUserSkills] = useState([]);
   const [userInterests, setUserInterests] = useState([]);
   const [search, setSearch] = useState("");
@@ -167,9 +207,9 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
   const [hoveredId, setHoveredId] = useState(null);
   const [profileComplete, setProfileComplete] = useState(false);
   const [favoritedCareers, setFavoritedCareers] = useState([]);
-  const { isMobile, isTablet, isDesktop } = useResponsive();
+  const { isMobile, isTablet } = useResponsive();
 
-  // Load user profile data from Firebase
+  // --- Fetch Firebase user data ---
   useEffect(() => {
     const user = auth.currentUser;
     if (!user) return;
@@ -177,30 +217,29 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
     const userRef = ref(db, "users/" + user.uid);
     onValue(userRef, (snapshot) => {
       const data = snapshot.val();
-      
-      // Update skills
+
+      // Skills
       if (data?.skills) {
         const arr = Array.isArray(data.skills) ? data.skills : [data.skills];
         setUserSkills(arr.map((s) => s.toLowerCase()));
       } else {
         setUserSkills([]);
       }
-      
-      // Update interests
+
+      // Interests
       if (data?.interests) {
         const arr = Array.isArray(data.interests) ? data.interests : [data.interests];
         setUserInterests(arr.map((i) => i.toLowerCase()));
       } else {
         setUserInterests([]);
       }
-      
-      // Check if profile is complete
+
       setProfileComplete(isProfileComplete(data));
     });
 
-    // Listen to favorite careers
+    // Favorites
     const unsubscribe = FavoritesService.listenToFavoriteCareers((favorites) => {
-      setFavoritedCareers(favorites.map(f => f.id));
+      setFavoritedCareers(favorites.map((f) => f.id));
     });
 
     return () => unsubscribe();
@@ -208,42 +247,38 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
 
   const toggleFavorite = async (e, career) => {
     e.stopPropagation();
-    const isFavorited = favoritedCareers.includes(career.id);
-    
-    if (isFavorited) {
+    const isFav = favoritedCareers.includes(career.id);
+
+    if (isFav) {
       await FavoritesService.removeCareerFromFavorites(career.id);
     } else {
       await FavoritesService.addCareerToFavorites(career);
     }
   };
 
-  // Compute match score for each career and filter **only matched**
+  // --- Matching Logic ---
   const matchedCareers = useMemo(() => {
     if (!userSkills || userSkills.length === 0) return [];
 
     const scored = CAREERS.map((career) => {
       const required = career.requiredSkills.map((s) => s.toLowerCase());
-      const skillMatched = required.filter((s) => userSkills.includes(s));
-      const skillMatchCount = skillMatched.length;
-      const skillMatchRatio = required.length ? skillMatchCount / required.length : 0;
-      
-      // Cap at 100% - extra skills don't increase score beyond 100%
-      const totalMatchRatio = Math.min(1, skillMatchRatio);
-      
+      const matched = required.filter((s) => userSkills.includes(s));
+
+      const matchRatio = matched.length / required.length;
+
       return {
         ...career,
-        matchCount: skillMatchCount,
-        matchRatio: totalMatchRatio,
-        matchedSkills: skillMatched,
+        matchCount: matched.length,
+        matchRatio: Math.min(1, matchRatio),
+        matchedSkills: matched,
       };
     })
-      .filter((c) => c.matchCount > 0) // only careers with at least 1 matched skill
+      .filter((c) => c.matchCount > 0)
       .sort((a, b) => b.matchRatio - a.matchRatio);
 
     return scored;
-  }, [userSkills, userInterests]);
+  }, [userSkills]);
 
-  // Apply category + search filters
   const filteredCareers = useMemo(() => {
     return matchedCareers.filter((career) => {
       if (activeCategory === "Favorites") {
@@ -259,21 +294,27 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
     });
   }, [matchedCareers, search, activeCategory, favoritedCareers]);
 
-  const handleOpenDetails = (career) => {
-    navigation.navigate("CareerDetails", {
-      career,
-      userSkills,
-    });
+  const openDetails = (career) => {
+    navigation.navigate("CareerDetails", { career, userSkills });
   };
 
   return (
     <View style={[styles.container, isMobile && styles.containerMobile]}>
-      <ScreenHeader title="Career Recommendations" subtitle="Discover careers that match your skills" />
+      <ScreenHeader
+        title="Career Recommendations"
+        subtitle="Discover careers that match your skills"
+        showHamburger={showHamburger}
+        onToggleSidebar={onToggleSidebar}
+        showLogo={true}
+      />
+
       {!profileComplete && (
-        <ProfileNotification onNavigateToProfile={() => setActivePage && setActivePage('Profile')} />
+        <ProfileNotification
+          onNavigateToProfile={() => setActivePage && setActivePage("Profile")}
+        />
       )}
-      {/* Search */}
-      <View style={styles.searchWrapper}>
+
+      <View style={styles.topRow}>
         <TextInput
           style={[styles.searchInput, isMobile && styles.searchInputMobile]}
           placeholder="Search career role"
@@ -283,12 +324,8 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
         />
       </View>
 
-      {/* Category chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.chipRow}
-      >
+      {/* Category Chips */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
         {CATEGORIES.map((cat) => (
           <TouchableOpacity
             key={cat}
@@ -311,21 +348,23 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
         ))}
       </ScrollView>
 
-      {/* Cards grid */}
+      {/* Career Cards */}
       <ScrollView style={styles.listScroll}>
         {filteredCareers.length === 0 ? (
-          <Text style={styles.emptyText}>
-            No matched careers yet. Try adding more skills in your Profile.
-          </Text>
+          <Text style={styles.emptyText}>No matched careers yet.</Text>
         ) : (
           <View style={styles.grid}>
             {filteredCareers.map((career) => (
               <TouchableOpacity
                 key={career.id}
-                onPress={() => handleOpenDetails(career)}
+                onPress={() => openDetails(career)}
                 style={[
                   styles.card,
-                  isMobile ? styles.cardMobile : isTablet ? styles.cardTablet : styles.cardDesktop,
+                  isMobile
+                    ? styles.cardMobile
+                    : isTablet
+                    ? styles.cardTablet
+                    : styles.cardDesktop,
                   hoveredId === career.id && styles.cardHovered,
                 ]}
                 {...(isWeb && {
@@ -334,14 +373,22 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
                 })}
               >
                 {/* Favorite Icon */}
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.favoriteIcon}
                   onPress={(e) => toggleFavorite(e, career)}
                 >
-                  <MaterialIcons 
-                    name={favoritedCareers.includes(career.id) ? "favorite" : "favorite-border"} 
-                    size={20} 
-                    color={favoritedCareers.includes(career.id) ? "#D4AF37" : colors.textLight} 
+                  <MaterialIcons
+                    name={
+                      favoritedCareers.includes(career.id)
+                        ? "favorite"
+                        : "favorite-border"
+                    }
+                    size={20}
+                    color={
+                      favoritedCareers.includes(career.id)
+                        ? "#D4AF37"
+                        : colors.textLight
+                    }
                   />
                 </TouchableOpacity>
 
@@ -354,10 +401,7 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
                 </View>
 
                 <Text style={styles.cardTitle}>{career.title}</Text>
-                {/* Tagline style T3: tags */}
-                <Text style={styles.cardTags}>
-                  {(career.tags || []).join("   ")}
-                </Text>
+                <Text style={styles.cardTags}>{(career.tags || []).join("   ")}</Text>
                 <Text style={styles.cardMatch}>
                   Matched skills: {career.matchCount}
                 </Text>
@@ -370,7 +414,8 @@ export default function CareerRecommendationScreen({ navigation, setActivePage }
   );
 }
 
-// ---------- STYLES ----------
+// ---------------- STYLES -------------------
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -379,28 +424,33 @@ const styles = StyleSheet.create({
   containerMobile: {
     padding: 12,
   },
-  searchWrapper: {
-    marginBottom: 8,
+
+  topRow: {
+    marginBottom: 10,
   },
+
   searchInput: {
-    backgroundColor: colors.card,
-    borderRadius: 10,
+    flex: 1,
+    backgroundColor: colors.grayLight,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.grayBorder,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
     fontSize: 13,
-    color: colors.textDark,
   },
   searchInputMobile: {
-    paddingVertical: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     fontSize: 16,
     minHeight: 48,
   },
+
   chipRow: {
     marginTop: 4,
     marginBottom: 10,
   },
+
   chip: {
     borderRadius: 20,
     borderWidth: 1,
@@ -412,15 +462,23 @@ const styles = StyleSheet.create({
     height: 36,
     justifyContent: "center",
     alignItems: "center",
+
+    // ⭐ Smoother hover transition (web)
+    ...(Platform.OS === "web" && {
+      transition: "background-color 0.35s ease, color 0.35s ease, border 0.35s ease",
+    }),
   },
+
   chipMobile: {
     paddingHorizontal: 18,
     paddingVertical: 10,
     height: 44,
   },
+
   chipActive: {
     backgroundColor: colors.primary,
   },
+
   chipText: {
     fontSize: 13,
     fontWeight: "500",
@@ -433,12 +491,14 @@ const styles = StyleSheet.create({
   listScroll: {
     marginTop: 4,
   },
+
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
 
+  // ---------- CARD STYLES WITH TRANSITION ----------
   card: {
     backgroundColor: "#F2F4F5",
     borderRadius: 16,
@@ -452,7 +512,14 @@ const styles = StyleSheet.create({
     elevation: 4,
     position: "relative",
     marginBottom: 16,
+
+    // ⭐ Smooth hover animation for Web
+    ...(Platform.OS === "web" && {
+      transition:
+        "all 0.45s ease", // <-- Adjust hover duration here
+    }),
   },
+
   cardMobile: {
     width: "100%",
     padding: 14,
@@ -463,6 +530,7 @@ const styles = StyleSheet.create({
   cardDesktop: {
     width: "32%",
   },
+
   cardHovered: {
     shadowColor: colors.accent,
     shadowOpacity: 0.35,
@@ -479,11 +547,13 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginBottom: 4,
   },
+
   cardTags: {
     fontSize: 11,
     color: colors.textLight,
     marginBottom: 6,
   },
+
   cardMatch: {
     fontSize: 12,
     color: colors.accent,
@@ -501,6 +571,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
   matchBadge: {
     position: "absolute",
     top: 10,
@@ -517,15 +588,17 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 4,
   },
+
   matchBadgeValue: {
     fontSize: 12,
     fontWeight: "700",
     color: colors.accent,
     marginBottom: -2,
-    textShadowColor: 'rgba(200,169,81,0.4)',
+    textShadowColor: "rgba(200,169,81,0.4)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
+
   matchBadgeLabel: {
     fontSize: 10,
     color: colors.accent,

@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from "react-native";
 import { useResponsive } from "../utils/useResponsive";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -22,7 +23,9 @@ import RealInternshipAPI from "../services/realInternshipAPI";
 import WebScrapingAPI from "../services/webScrapingAPI";
 import FavoritesService from "../services/favoritesService";
 
-export default function InternshipScreen({ navigation, setActivePage }) {
+const isWeb = Platform.OS === "web";
+
+export default function InternshipScreen({ navigation, setActivePage, showHamburger, onToggleSidebar }) {
   const [internships, setInternships] = useState([]);
   const [userSkills, setUserSkills] = useState([]);
   const [userInterests, setUserInterests] = useState([]);
@@ -33,6 +36,7 @@ export default function InternshipScreen({ navigation, setActivePage }) {
   const [profileComplete, setProfileComplete] = useState(false);
   const [lastProfileUpdate, setLastProfileUpdate] = useState(null);
   const [favoritedInternships, setFavoritedInternships] = useState([]);
+  const [hoveredId, setHoveredId] = useState(null);
   const { isMobile } = useResponsive();
 
   useEffect(() => {
@@ -188,7 +192,13 @@ export default function InternshipScreen({ navigation, setActivePage }) {
 
   return (
     <View style={[styles.container, isMobile && styles.containerMobile]}>
-      <ScreenHeader title="Internships" subtitle="Live opportunities from multiple sources" />
+      <ScreenHeader 
+        title="Internships" 
+        subtitle="Live opportunities from multiple sources"
+        showHamburger={showHamburger}
+        onToggleSidebar={onToggleSidebar}
+        showLogo={true}
+      />
       {!profileComplete && (
         <ProfileNotification onNavigateToProfile={() => setActivePage && setActivePage('Profile')} />
       )}
@@ -285,10 +295,14 @@ export default function InternshipScreen({ navigation, setActivePage }) {
             list.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.card}
+                style={[styles.card, hoveredId === item.id && styles.cardHovered]}
                 onPress={() =>
                   navigation.navigate("InternshipDetails", { job: item })
                 }
+                {...(isWeb && {
+                  onMouseEnter: () => setHoveredId(item.id),
+                  onMouseLeave: () => setHoveredId(null),
+                })}
               >
                 <View style={styles.cardHeader}>
                   <MaterialIcons name="work" size={24} color={colors.primary} />
@@ -450,11 +464,21 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.grayBorder,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    shadowColor: colors.accent,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+    position: "relative",
+  },
+  cardHovered: {
+    shadowColor: colors.accent,
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+    transform: [{ translateY: -4 }, { scale: 1.02 }],
+    borderColor: colors.accent,
   },
   cardHeader: {
     flexDirection: "row",

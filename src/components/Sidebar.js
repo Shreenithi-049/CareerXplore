@@ -1,11 +1,14 @@
 // src/components/Sidebar.js
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, StatusBar } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { auth } from "../services/firebaseConfig";
 import colors from "../theme/colors";
+import { useResponsive } from "../utils/useResponsive";
 
 export default function Sidebar({ activePage, setActivePage, navigation, onClose }) {
+  const { isMobile } = useResponsive();
+  
   const menuItems = [
     { key: "Dashboard", label: "Home", icon: "home-filled" },
     { key: "Careers", label: "Careers", icon: "psychology" },
@@ -16,9 +19,10 @@ export default function Sidebar({ activePage, setActivePage, navigation, onClose
   ];
 
   const handleMenuPress = (key) => {
-    if (key === "Dashboard" || key === "Careers" || key === "Internships" || key === "Tracker" || key === "Analytics" || key === "Profile") {
-      setActivePage(key);
-      if (onClose) onClose();
+    setActivePage(key);
+    if (onClose) {
+      // Add slight delay for smooth animation
+      setTimeout(() => onClose(), 100);
     }
   };
 
@@ -32,15 +36,25 @@ export default function Sidebar({ activePage, setActivePage, navigation, onClose
   };
 
   return (
-    <View style={styles.sidebar}>
+    <View style={[styles.sidebar, isMobile && styles.sidebarMobile]}>
+      {/* Close Button for Mobile */}
+      {isMobile && (
+        <TouchableOpacity 
+          style={styles.closeButton}
+          onPress={onClose}
+        >
+          <MaterialIcons name="close" size={24} color={colors.white} />
+        </TouchableOpacity>
+      )}
+
       {/* Logo / Branding */}
-      <View style={styles.logoContainer}>
+      <View style={[styles.logoContainer, isMobile && styles.logoContainerMobile]}>
         <Image 
           source={require('../../assets/CareerXplore_logo_alone.png')}
-          style={styles.logo}
+          style={[styles.logo, isMobile && styles.logoMobile]}
           resizeMode="contain"
         />
-        <Text style={styles.logoTitle}>CareerXplore</Text>
+        <Text style={[styles.logoTitle, isMobile && styles.logoTitleMobile]}>CareerXplore</Text>
       </View>
 
       {/* Menu Options */}
@@ -93,15 +107,38 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     justifyContent: "space-between",
   },
+  sidebarMobile: {
+    width: '100%',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 50,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 50,
+    right: 16,
+    zIndex: 10,
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
 
   logoContainer: {
     alignItems: "center",
     marginBottom: 20,
   },
+  logoContainerMobile: {
+    marginBottom: 30,
+    marginTop: 10,
+  },
   logo: {
     width: 100,
     height: 100,
     marginBottom: 4,
+  },
+  logoMobile: {
+    width: 80,
+    height: 80,
   },
   logoTitle: {
     color: colors.white,
@@ -109,6 +146,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontFamily: "serif",
     letterSpacing: 0.5,
+  },
+  logoTitleMobile: {
+    fontSize: 20,
   },
 
   menuContainer: {
@@ -118,11 +158,11 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    marginBottom: 10,
-    minHeight: 48,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+    minHeight: 52,
   },
   menuItemActive: {
     backgroundColor: "rgba(200,169,81,0.15)",
@@ -136,23 +176,26 @@ const styles = StyleSheet.create({
   },
   menuLabel: {
     color: "#E5E7EB",
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "500",
   },
 
   logoutItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 6,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
     marginTop: 10,
-    minHeight: 48,
+    minHeight: 52,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
   },
   logoutText: {
     color: colors.danger,
-    marginLeft: 8,
-    fontSize: 14,
+    marginLeft: 10,
+    fontSize: 15,
     fontWeight: "600",
   },
 });

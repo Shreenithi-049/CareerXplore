@@ -7,7 +7,11 @@ import {
   View,
   TouchableOpacity,
   Image,
+  Modal,
+  Platform,
+  Linking,
 } from "react-native";
+import { WebView } from 'react-native-webview';
 import { useResponsive } from "../utils/useResponsive";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as ImagePicker from 'expo-image-picker';
@@ -26,7 +30,7 @@ import { isProfileComplete } from "../utils/profileUtils";
 import { forceProfileComplete } from "../utils/forceProfileComplete";
 import { awardXP, BADGES } from "../services/gamificationService";
 
-export default function ProfileScreen({ navigation }) {
+export default function ProfileScreen({ navigation, showHamburger, onToggleSidebar }) {
   const [fullName, setFullName] = useState("");
   const [education, setEducation] = useState("");
   const [skills, setSkills] = useState([]);
@@ -37,6 +41,8 @@ export default function ProfileScreen({ navigation }) {
   const [originalData, setOriginalData] = useState({});
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showResumeUpload, setShowResumeUpload] = useState(false);
+  const [showResumeViewer, setShowResumeViewer] = useState(false);
+
   const [xp, setXp] = useState(0);
   const [badges, setBadges] = useState([]);
   const { isMobile } = useResponsive();
@@ -156,6 +162,21 @@ export default function ProfileScreen({ navigation }) {
     setProfileImage(null);
   };
 
+  const handleViewResume = async () => {
+    if (resume) {
+      const resumeUri = resume.uri || resume;
+      if (Platform.OS === 'web') {
+        try {
+          await Linking.openURL(resumeUri);
+        } catch (error) {
+          Alert.alert("Error", "Failed to open resume");
+        }
+      } else {
+        setShowResumeViewer(true);
+      }
+    }
+  };
+
   const triggerReRecommendations = () => {
     // Trigger a refresh of career recommendations and internships
     // by updating a timestamp that other screens can listen to
@@ -218,20 +239,19 @@ export default function ProfileScreen({ navigation }) {
 
   return (
     <View style={[styles.container, isMobile && styles.containerMobile]}>
-      <ScreenHeader title="Profile" subtitle="Manage your personal information and skills" />
+      <ScreenHeader 
+        title="Profile" 
+        subtitle="Manage your personal information and skills"
+        showHamburger={showHamburger}
+        onToggleSidebar={onToggleSidebar}
+        showLogo={true}
+      />
+
       
-      <View style={styles.profileContent}>
-        {!isEditing && (
-          <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
-            <MaterialIcons name="edit" size={20} color={colors.white} />
-            <Text style={styles.editButtonText}>Edit</Text>
-          </TouchableOpacity>
-        )}
-        
-        <ScrollView style={styles.scrollContent}>
+      <ScrollView style={styles.content}>
         {/* Image Picker Modal */}
         {showImagePicker && (
-          <View style={styles.modalOverlay}>
+          <View style={styles.imagePickerOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Select Profile Picture</Text>
               <TouchableOpacity 
@@ -262,9 +282,8 @@ export default function ProfileScreen({ navigation }) {
           </View>
         )}
         
-        {/* Profile Picture Section */}
-        <View style={styles.profileImageSection}>
-         
+        {/* Profile Header Section */}
+        <View style={styles.profileHeader}>
           <View style={styles.imageContainer}>
             {profileImage ? (
               <View style={styles.imageWrapper}>
@@ -295,7 +314,49 @@ export default function ProfileScreen({ navigation }) {
               </TouchableOpacity>
             )}
           </View>
+          
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{fullName || "Your Name"}</Text>
+            <Text style={styles.profileEducation}>{education || "Add your education"}</Text>
+          </View>
+          
+          <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+            <MaterialIcons name="edit" size={18} color={colors.accent} />
+          </TouchableOpacity>
         </View>
+
+        {/* Skills & Interests Summary */}
+        <View style={styles.summarySection}>
+          {skills.length > 0 && (
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryTitle}>Skills</Text>
+              {skills.map((skill, index) => (
+                <Text key={index} style={styles.bulletPoint}>• {skill}</Text>
+              ))}
+            </View>
+          )}
+          
+          {interests.length > 0 && (
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryTitle}>Interests</Text>
+              {interests.map((interest, index) => (
+                <Text key={index} style={styles.bulletPoint}>• {interest}</Text>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Resume Preview */}
+        {resume && (
+          <View style={styles.resumeSection}>
+            <Text style={styles.summaryTitle}>Resume</Text>
+            <TouchableOpacity style={styles.resumePreview} onPress={handleViewResume}>
+              <MaterialIcons name="description" size={24} color={colors.accent} />
+              <Text style={styles.resumeText}>View Resume</Text>
+              <MaterialIcons name="open-in-new" size={16} color={colors.textLight} />
+            </TouchableOpacity>
+          </View>
+        )}
 
         <XPProgressBar currentXP={xp} nextLevel={300} />
 
@@ -316,62 +377,123 @@ export default function ProfileScreen({ navigation }) {
           </View>
         )}
 
-        <Text style={styles.label}>Full Name</Text>
-        <InputField 
-          value={fullName} 
-          onChangeText={setFullName} 
-          editable={isEditing}
-          style={!isEditing && styles.disabledInput}
-        />
-
-        <Text style={styles.label}>Education</Text>
-        <InputField
-          value={education}
-          onChangeText={setEducation}
-          placeholder="E.g. B.Sc IT, Final Year"
-          editable={isEditing}
-          style={!isEditing && styles.disabledInput}
-        />
-
-        <SkillSelector 
-          selectedSkills={skills} 
-          onChange={setSkills} 
-          disabled={!isEditing}
-        />
-
-        <Text style={styles.label}>Interests</Text>
-        <InterestSelector 
-          selectedInterests={interests} 
-          onChange={setInterests} 
-          disabled={!isEditing}
-        />
-
-        <Text style={styles.label}>Resume</Text>
-        <ResumeUploader 
-          resume={resume}
-          onUpload={setResume}
-          disabled={!isEditing}
-        />
-        
-
-
+        {/* Edit Profile Modal */}
         {isEditing && (
-          <View style={[styles.buttonContainer, isMobile && styles.buttonContainerMobile]}>
-            <Button 
-              title="Cancel" 
-              onPress={handleCancel}
-              style={styles.cancelButton}
-              textStyle={styles.cancelButtonText}
-            />
-            <Button 
-              title="Save Changes" 
-              onPress={handleSave}
-              style={styles.saveButton}
-            />
+          <View style={styles.modalOverlay}>
+            <View style={styles.editModalContent}>
+              <View style={styles.editModalHeader}>
+                <Text style={styles.editModalTitle}>Edit Profile</Text>
+                <TouchableOpacity onPress={handleCancel}>
+                  <MaterialIcons name="close" size={24} color={colors.textLight} />
+                </TouchableOpacity>
+              </View>
+              
+              <ScrollView style={styles.editModalScroll}>
+                {/* Profile Picture Upload */}
+                <Text style={styles.label}>Profile Picture</Text>
+                <View style={styles.profileImageSection}>
+                  <View style={styles.imageContainer}>
+                    {profileImage ? (
+                      <View style={styles.imageWrapper}>
+                        {profileImage === 'default' ? (
+                          <Image source={require('../../assets/profile.png')} style={styles.editProfileImage} />
+                        ) : (
+                          <Image source={{ uri: profileImage }} style={styles.editProfileImage} />
+                        )}
+                        <View style={styles.imageActions}>
+                          <TouchableOpacity style={styles.imageActionButton} onPress={pickImage}>
+                            <MaterialIcons name="edit" size={16} color={colors.white} />
+                          </TouchableOpacity>
+                          <TouchableOpacity style={styles.imageActionButton} onPress={removeImage}>
+                            <MaterialIcons name="delete" size={16} color={colors.white} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    ) : (
+                      <TouchableOpacity 
+                        style={styles.editImagePlaceholder} 
+                        onPress={pickImage}
+                        activeOpacity={0.7}
+                      >
+                        <MaterialIcons name="person" size={40} color={colors.textLight} />
+                        <Text style={styles.uploadText}>Tap to upload</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                </View>
+                
+                <Text style={styles.label}>Full Name</Text>
+                <InputField 
+                  value={fullName} 
+                  onChangeText={setFullName}
+                />
+
+                <Text style={styles.label}>Education</Text>
+                <InputField
+                  value={education}
+                  onChangeText={setEducation}
+                  placeholder="E.g. B.Sc IT, Final Year"
+                />
+
+                <SkillSelector 
+                  selectedSkills={skills} 
+                  onChange={setSkills}
+                />
+
+                <Text style={styles.label}>Interests</Text>
+                <InterestSelector 
+                  selectedInterests={interests} 
+                  onChange={setInterests}
+                />
+
+                <Text style={styles.label}>Resume</Text>
+                <ResumeUploader 
+                  resume={resume}
+                  onUpload={setResume}
+                />
+              </ScrollView>
+              
+              <View style={styles.editModalButtons}>
+                <Button 
+                  title="Cancel" 
+                  onPress={handleCancel}
+                  style={styles.cancelButton}
+                  textStyle={styles.cancelButtonText}
+                />
+                <Button 
+                  title="Save Changes" 
+                  onPress={handleSave}
+                  style={styles.saveButton}
+                />
+              </View>
+            </View>
           </View>
         )}
-        </ScrollView>
-      </View>
+        
+        {/* Resume Viewer Modal - Only for mobile platforms */}
+        {Platform.OS !== 'web' && (
+          <Modal
+            visible={showResumeViewer}
+            animationType="slide"
+            onRequestClose={() => setShowResumeViewer(false)}
+          >
+            <View style={styles.resumeViewerContainer}>
+              <View style={styles.resumeViewerHeader}>
+                <Text style={styles.resumeViewerTitle}>Resume</Text>
+                <TouchableOpacity onPress={() => setShowResumeViewer(false)}>
+                  <MaterialIcons name="close" size={24} color={colors.textLight} />
+                </TouchableOpacity>
+              </View>
+              <WebView
+                source={{ uri: resume?.uri || resume }}
+                style={styles.resumeWebView}
+                startInLoadingState={true}
+              />
+            </View>
+          </Modal>
+        )}
+
+      </ScrollView>
     </View>
   );
 }
@@ -379,37 +501,24 @@ export default function ProfileScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 20,
-  },
-  containerMobile: {
-    paddingTop: 12,
-  },
-  profileContent: {
-    flex: 1,
     padding: 20,
     position: "relative",
   },
+  containerMobile: {
+    padding: 12,
+  },
   editButton: {
-    position: "absolute",
-    top: 0,
-    right: 60,
-    backgroundColor: colors.accent,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    padding: 8,
     borderRadius: 20,
-    zIndex: 10,
+    backgroundColor: colors.grayLight,
+    alignItems: "center",
+    justifyContent: "center",
+    minWidth: 44,
+    minHeight: 44,
   },
-  editButtonText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 4,
-  },
-  scrollContent: {
+  content: {
     flex: 1,
-    paddingTop: 50,
+    paddingHorizontal: 20,
   },
   label: {
     fontSize: 14,
@@ -418,9 +527,40 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     marginTop: 10,
   },
-  disabledInput: {
-    backgroundColor: colors.grayLight,
-    color: colors.textLight,
+  editModalContent: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    margin: 20,
+    maxHeight: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  editModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.grayBorder,
+  },
+  editModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  editModalScroll: {
+    flex: 1,
+    padding: 20,
+  },
+  editModalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.grayBorder,
   },
   buttonContainer: {
     flexDirection: "row",
@@ -445,20 +585,97 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: colors.textDark,
   },
-  profileImageSection: {
-    alignItems: "flex-start",
+  profileHeader: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
+    gap: 16,
   },
   imageContainer: {
-    alignItems: "flex-start",
+    alignItems: "center",
+  },
+  profileInfo: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  profileName: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: colors.primary,
+    marginBottom: 4,
+  },
+  profileEducation: {
+    fontSize: 14,
+    color: colors.textLight,
+    fontWeight: "500",
+  },
+  summarySection: {
+    marginBottom: 20,
+    gap: 12,
+  },
+  summaryItem: {
+    gap: 4,
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.primary,
+    marginBottom: 6,
+  },
+  bulletPoint: {
+    fontSize: 14,
+    color: colors.textLight,
+    marginLeft: 8,
+    lineHeight: 20,
+  },
+  resumeSection: {
+    marginBottom: 20,
+  },
+  resumePreview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.grayBorder,
+    gap: 12,
+  },
+  resumeText: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: '500',
+  },
+  profileImageSection: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  editProfileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: colors.accent,
+  },
+  editImagePlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: colors.grayLight,
+    borderWidth: 2,
+    borderColor: colors.grayBorder,
+    borderStyle: 'dashed',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   imageWrapper: {
     position: "relative",
   },
   profileImagePreview: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     borderWidth: 3,
     borderColor: colors.accent,
   },
@@ -478,9 +695,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   imagePlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: colors.grayLight,
     borderWidth: 2,
     borderColor: colors.grayBorder,
@@ -489,7 +706,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   uploadText: {
-    fontSize: 12,
+    fontSize: 10,
     color: colors.textLight,
     marginTop: 4,
     textAlign: "center",
@@ -504,6 +721,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1000,
+  },
+  imagePickerOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 2000,
   },
   modalContent: {
     backgroundColor: colors.white,
@@ -561,5 +789,25 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: colors.textLight,
     textAlign: "center",
+  },
+  resumeViewerContainer: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+  resumeViewerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.grayBorder,
+  },
+  resumeViewerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  resumeWebView: {
+    flex: 1,
   },
 });

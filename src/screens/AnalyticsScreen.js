@@ -7,50 +7,15 @@ import { auth, db } from '../services/firebaseConfig';
 import ScreenHeader from '../components/ScreenHeader';
 import colors from '../theme/colors';
 
-const CircularProgress = ({ percentage, size = 120, strokeWidth = 10, color = colors.accent }) => {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const progress = (percentage / 100) * circumference;
-
+const CircularProgress = ({ percentage, size = 100, color = colors.accent }) => {
   return (
-    <View style={{ width: size, height: size, position: 'relative' }}>
-      <svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={colors.grayLight}
-          strokeWidth={strokeWidth}
-          fill="none"
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={color}
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference - progress}
-          strokeLinecap="round"
-        />
-      </svg>
-      <View style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <Text style={{ fontSize: 28, fontWeight: '700', color: color }}>{percentage}%</Text>
-      </View>
+    <View style={{ width: size, height: size, borderRadius: size/2, backgroundColor: colors.grayLight, justifyContent: 'center', alignItems: 'center', borderWidth: 8, borderColor: color }}>
+      <Text style={{ fontSize: 24, fontWeight: '700', color: color }}>{percentage}%</Text>
     </View>
   );
 };
 
-export default function AnalyticsScreen() {
+export default function AnalyticsScreen({ showHamburger, onToggleSidebar }) {
   const [userData, setUserData] = useState(null);
   const [fadeAnim] = useState(new Animated.Value(0));
   const { isMobile } = useResponsive();
@@ -79,10 +44,16 @@ export default function AnalyticsScreen() {
   const appProgress = Math.min((applications / 10) * 100, 100);
 
   return (
-    <ScrollView style={[styles.container, isMobile && styles.containerMobile]}>
-      <ScreenHeader title="Analytics" subtitle="Track your progress" />
-
-      <Animated.View style={{ opacity: fadeAnim }}>
+    <View style={[styles.container, isMobile && styles.containerMobile]}>
+      <ScreenHeader 
+        title="Analytics" 
+        subtitle="Track your progress"
+        showHamburger={showHamburger}
+        onToggleSidebar={onToggleSidebar}
+        showLogo={true}
+      />
+      <ScrollView style={styles.content}>
+        <Animated.View style={{ opacity: fadeAnim }}>
         {/* Stats Grid */}
         <View style={[styles.statsGrid, isMobile && styles.statsGridMobile]}>
           <View style={styles.statBox}>
@@ -141,8 +112,9 @@ export default function AnalyticsScreen() {
             </View>
           </View>
         </View>
-      </Animated.View>
-    </ScrollView>
+        </Animated.View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -153,6 +125,9 @@ const styles = StyleSheet.create({
   },
   containerMobile: {
     padding: 12,
+  },
+  content: {
+    flex: 1,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -219,37 +194,40 @@ const styles = StyleSheet.create({
   circularCard: {
     backgroundColor: colors.card,
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
     marginBottom: 16,
-    flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.grayBorder,
     shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   circularInfo: {
-    flex: 1,
-    marginLeft: 20,
+    width: '100%',
+    marginTop: 16,
+    alignItems: 'center',
   },
   circularTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: colors.primary,
     marginBottom: 4,
+    textAlign: 'center',
   },
   circularSubtitle: {
     fontSize: 14,
     fontWeight: '600',
     color: colors.accent,
     marginBottom: 6,
+    textAlign: 'center',
   },
   circularDescription: {
     fontSize: 12,
     color: colors.textLight,
     lineHeight: 16,
+    textAlign: 'center',
   },
 });

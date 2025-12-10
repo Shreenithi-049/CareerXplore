@@ -3,13 +3,16 @@ import { View, Text, StyleSheet } from 'react-native';
 import colors from '../theme/colors';
 
 export default function XPProgressBar({ currentXP, nextLevel = 300 }) {
-  const progress = Math.min((currentXP / nextLevel) * 100, 100);
+  // Calculate current level and XP within that level
+  const currentLevel = Math.floor(currentXP / nextLevel) + 1;
+  const xpInCurrentLevel = currentXP % nextLevel;
+  const progress = Math.min((xpInCurrentLevel / nextLevel) * 100, 100);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.label}>XP Progress</Text>
-        <Text style={styles.xpText}>{currentXP} / {nextLevel} XP</Text>
+        <Text style={styles.label}>Level {currentLevel} Progress</Text>
+        <Text style={styles.xpText}>{xpInCurrentLevel} / {nextLevel} XP</Text>
       </View>
       <View style={styles.progressBar}>
         <View style={[styles.progressFill, { width: `${progress}%` }]} />

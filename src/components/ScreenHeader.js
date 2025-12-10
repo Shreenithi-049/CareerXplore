@@ -31,7 +31,7 @@ export default function ScreenHeader({ title, subtitle, showHamburger, onToggleS
 const styles = StyleSheet.create({
   header: {
     backgroundColor: "#2C3E3F",
-    marginBottom: 20,
+    marginBottom: 16,
     marginHorizontal: -20,
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -42,10 +42,17 @@ const styles = StyleSheet.create({
   },
   hamburger: {
     marginRight: 16,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerLogo: {
-    width: 100,
-    height: 100,
+    width: 60,
+    height: 60,
     marginRight: 12,
   },
   titleContainer: {

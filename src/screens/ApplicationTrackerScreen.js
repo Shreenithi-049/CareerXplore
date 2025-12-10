@@ -28,7 +28,7 @@ const STATUS_CONFIG = {
   rejected: { label: "Rejected", icon: "cancel", color: "#EF4444" }
 };
 
-export default function ApplicationTrackerScreen() {
+export default function ApplicationTrackerScreen({ showHamburger, onToggleSidebar }) {
   const [applications, setApplications] = useState([]);
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedApp, setSelectedApp] = useState(null);
@@ -108,8 +108,14 @@ export default function ApplicationTrackerScreen() {
 
   return (
     <View style={[styles.container, isMobile && styles.containerMobile]}>
-      <ScreenHeader title="Application Tracker" subtitle="Track your internship journey" />
-
+      <ScreenHeader 
+        title="Application Tracker" 
+        subtitle="Track your internship journey"
+        showHamburger={showHamburger}
+        onToggleSidebar={onToggleSidebar}
+        showLogo={true}
+      />
+      
       {/* Stats Overview */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statsRow}>
         <TouchableOpacity

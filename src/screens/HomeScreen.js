@@ -30,9 +30,8 @@ export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePa
   }, []);
 
   return (
-    <View style={[styles.container, isMobile && styles.containerMobile, isDesktop && styles.containerDesktop]}>
+    <View style={[styles.container, isMobile && styles.containerMobile]}>
       <ScreenHeader 
-        style={styles.logoTitle}
         title="CareerXplore" 
         subtitle="Unlock Your Perfect Career Path" 
         showHamburger={showHamburger}
@@ -89,11 +88,6 @@ const styles = StyleSheet.create({
   },
   containerMobile: {
     padding: 12,
-  },
-  containerDesktop: {
-    maxWidth: 1200,
-    alignSelf: 'center',
-    width: '100%',
   },
   greeting: {
     fontSize: 20,
