@@ -1,5 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { View, StyleSheet, Animated, TouchableOpacity } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Animated,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
 import Sidebar from "../components/Sidebar";
 import HomeScreen from "../screens/HomeScreen";
 import CareerRecommendationScreen from "../screens/CareerRecommendationScreen";
@@ -14,10 +20,10 @@ export default function DashboardShell({ navigation }) {
   const [activePage, setActivePage] = useState("Dashboard");
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
-  // match the sidebar width defined in `src/components/Sidebar.js`
+  const [hoverHamburger, setHoverHamburger] = useState(false);
+
   const SIDEBAR_WIDTH = 220;
 
-  // Animation controllers
   const sidebarX = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const contentX = useRef(new Animated.Value(0)).current;
 
@@ -26,7 +32,6 @@ export default function DashboardShell({ navigation }) {
     setSidebarVisible(false);
   };
 
-  // Animate: sidebar + content slide together
   useEffect(() => {
     if (sidebarVisible) {
       Animated.parallel([
@@ -101,7 +106,7 @@ export default function DashboardShell({ navigation }) {
         />
       </Animated.View>
 
-      {/* Content sliding with sidebar */}
+      {/* Content that slides */}
       <Animated.View
         style={[
           styles.content,
@@ -117,6 +122,9 @@ export default function DashboardShell({ navigation }) {
             style={styles.backdrop}
             activeOpacity={1}
             onPress={() => setSidebarVisible(false)}
+            {...(Platform.OS === "web"
+              ? { onMouseEnter: () => {}, style: styles.backdropHover }
+              : {})}
           />
         )}
       </Animated.View>
@@ -132,7 +140,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 
-  /* Sidebar sticks to the left, slides via translateX */
   sidebarContainer: {
     position: "absolute",
     left: 0,
@@ -144,13 +151,12 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
 
-  /* Entire screen slides with sidebar */
   content: {
     flex: 1,
     zIndex: 5,
   },
 
-  /* Backdrop (click to close sidebar) */
+  /* Backdrop */
   backdrop: {
     position: "absolute",
     top: 0,
@@ -159,4 +165,12 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(0,0,0,0.4)",
   },
+
+  /* Hover cursor for backdrop (web) */
+  backdropHover: Platform.select({
+    web: {
+      cursor: "pointer",
+    },
+    default: {},
+  }),
 });
