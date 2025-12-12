@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from "react-native";
+import { View, Text, StyleSheet, Image, Platform } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../theme/colors";
+import InteractiveWrapper from "./InteractiveWrapper";
 
 export default function ScreenHeader({ title, subtitle, showHamburger, onToggleSidebar, showLogo = false }) {
   const [hover, setHover] = useState(false);
@@ -11,7 +12,7 @@ export default function ScreenHeader({ title, subtitle, showHamburger, onToggleS
       <View style={styles.headerContent}>
 
         {showHamburger && (
-          <TouchableOpacity
+          <InteractiveWrapper
             style={[styles.hamburger, hover && styles.hamburgerHover]}
             onPress={onToggleSidebar}
             {...(Platform.OS === "web"
@@ -22,7 +23,7 @@ export default function ScreenHeader({ title, subtitle, showHamburger, onToggleS
               : {})}
           >
             <MaterialIcons name="menu" size={24} color={colors.white} />
-          </TouchableOpacity>
+          </InteractiveWrapper>
         )}
 
         {showLogo && (
@@ -46,9 +47,10 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: "#2C3E3F",
     marginBottom: 16,
-    marginHorizontal: -20,
     paddingHorizontal: 20,
     paddingVertical: 16,
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
   },
 
   headerContent: {

@@ -3,11 +3,11 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useResponsive } from "../utils/useResponsive";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../theme/colors";
@@ -17,6 +17,8 @@ import ScreenHeader from "../components/ScreenHeader";
 import ProfileNotification from "../components/ProfileNotification";
 import { isProfileComplete } from "../utils/profileUtils";
 import FavoritesService from "../services/favoritesService";
+import HeaderBanner from "../components/HeaderBanner";
+import InteractiveWrapper from "../components/InteractiveWrapper";
 
 const isWeb = Platform.OS === "web";
 
@@ -299,130 +301,162 @@ export default function CareerRecommendationScreen({
   };
 
   return (
-    <View style={[styles.container, isMobile && styles.containerMobile]}>
-      <ScreenHeader
-        title="Career Recommendations"
-        subtitle="Discover careers that match your skills"
-        showHamburger={showHamburger}
-        onToggleSidebar={onToggleSidebar}
-        showLogo={true}
-      />
-
-      {!profileComplete && (
-        <ProfileNotification
-          onNavigateToProfile={() => setActivePage && setActivePage("Profile")}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={[styles.container, isMobile && styles.containerMobile]}>
+        <ScreenHeader
+          title="Career Recommendations"
+          subtitle="Discover careers that match your skills"
+          showHamburger={showHamburger}
+          onToggleSidebar={onToggleSidebar}
+          showLogo={true}
         />
-      )}
 
-      <View style={styles.topRow}>
-        <TextInput
-          style={[styles.searchInput, isMobile && styles.searchInputMobile]}
-          placeholder="Search career role"
-          placeholderTextColor={colors.textLight}
-          value={search}
-          onChangeText={setSearch}
-        />
-      </View>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <HeaderBanner
+            image={require("../../assets/careerrecommendation_header.webp")}
+            title="Find roles that fit you"
+            subtitle="Curated matches based on your skills. Explore categories and your favorites."
+            height={isMobile ? 200 : 260}
+            overlayOpacity={0.25}
+          />
 
-      {/* Category Chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-        {CATEGORIES.map((cat) => (
-          <TouchableOpacity
-            key={cat}
-            style={[
-              styles.chip,
-              isMobile && styles.chipMobile,
-              activeCategory === cat && styles.chipActive,
-            ]}
-            onPress={() => setActiveCategory(cat)}
-          >
-            <Text
-              style={[
-                styles.chipText,
-                activeCategory === cat && styles.chipTextActive,
-              ]}
-            >
-              {cat}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+          {!profileComplete && (
+            <ProfileNotification
+              onNavigateToProfile={() => setActivePage && setActivePage("Profile")}
+            />
+          )}
 
-      {/* Career Cards */}
-      <ScrollView style={styles.listScroll}>
-        {filteredCareers.length === 0 ? (
-          <Text style={styles.emptyText}>No matched careers yet.</Text>
-        ) : (
-          <View style={styles.grid}>
-            {filteredCareers.map((career) => (
-              <TouchableOpacity
-                key={career.id}
-                onPress={() => openDetails(career)}
-                style={[
-                  styles.card,
-                  isMobile
-                    ? styles.cardMobile
-                    : isTablet
-                    ? styles.cardTablet
-                    : styles.cardDesktop,
-                  hoveredId === career.id && styles.cardHovered,
-                ]}
-                {...(isWeb && {
-                  onMouseEnter: () => setHoveredId(career.id),
-                  onMouseLeave: () => setHoveredId(null),
-                })}
-              >
-                {/* Favorite Icon */}
-                <TouchableOpacity
-                  style={styles.favoriteIcon}
-                  onPress={(e) => toggleFavorite(e, career)}
-                >
-                  <MaterialIcons
-                    name={
-                      favoritedCareers.includes(career.id)
-                        ? "favorite"
-                        : "favorite-border"
-                    }
-                    size={20}
-                    color={
-                      favoritedCareers.includes(career.id)
-                        ? "#D4AF37"
-                        : colors.textLight
-                    }
-                  />
-                </TouchableOpacity>
-
-                {/* Match Badge */}
-                <View style={styles.matchBadge}>
-                  <Text style={styles.matchBadgeValue}>
-                    {(career.matchRatio * 100).toFixed(0)}%
-                  </Text>
-                  <Text style={styles.matchBadgeLabel}>match</Text>
-                </View>
-
-                <Text style={styles.cardTitle}>{career.title}</Text>
-                <Text style={styles.cardTags}>{(career.tags || []).join("   ")}</Text>
-                <Text style={styles.cardMatch}>
-                  Matched skills: {career.matchCount}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <View style={styles.topRow}>
+            <TextInput
+              style={[styles.searchInput, isMobile && styles.searchInputMobile]}
+              placeholder="Search career role"
+              placeholderTextColor={colors.textLight}
+              value={search}
+              onChangeText={setSearch}
+            />
           </View>
-        )}
-      </ScrollView>
-    </View>
+
+          {/* Category Chips */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.chipRow}
+            contentContainerStyle={styles.chipContent}
+          >
+            {CATEGORIES.map((cat) => (
+              <InteractiveWrapper
+                key={cat}
+                style={[
+                  styles.chip,
+                  isMobile && styles.chipMobile,
+                  activeCategory === cat && styles.chipActive,
+                ]}
+                onPress={() => setActiveCategory(cat)}
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    activeCategory === cat && styles.chipTextActive,
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </InteractiveWrapper>
+            ))}
+          </ScrollView>
+
+          {/* Career Cards */}
+          <View style={styles.listScroll}>
+            {filteredCareers.length === 0 ? (
+              <Text style={styles.emptyText}>No matched careers yet.</Text>
+            ) : (
+              <View style={styles.grid}>
+                {filteredCareers.map((career) => (
+                  <InteractiveWrapper
+                    key={career.id}
+                    onPress={() => openDetails(career)}
+                    style={[
+                      styles.card,
+                      isMobile
+                        ? styles.cardMobile
+                        : isTablet
+                        ? styles.cardTablet
+                        : styles.cardDesktop,
+                      hoveredId === career.id && styles.cardHovered,
+                    ]}
+                    {...(isWeb && {
+                      onMouseEnter: () => setHoveredId(career.id),
+                      onMouseLeave: () => setHoveredId(null),
+                    })}
+                  >
+                    {/* Match Badge - Top Right */}
+                    <View style={styles.matchBadge}>
+                      <Text style={styles.matchBadgeValue}>
+                        {(career.matchRatio * 100).toFixed(0)}%
+                      </Text>
+                      <Text style={styles.matchBadgeLabel}>match</Text>
+                    </View>
+
+                    {/* Content Section */}
+                    <View style={styles.cardContent}>
+                      <Text style={styles.cardTitle}>{career.title}</Text>
+                      <Text style={styles.cardTags}>{(career.tags || []).join("   ")}</Text>
+                      <Text style={styles.cardMatch}>
+                        Matched skills: {career.matchCount}
+                      </Text>
+                    </View>
+
+                    {/* Favorite Icon - Bottom Right */}
+                    <InteractiveWrapper
+                      style={styles.favoriteIcon}
+                      onPress={(e) => toggleFavorite(e, career)}
+                      androidRippleColor={colors.accent + "33"}
+                      hitSlop={8}
+                    >
+                      <MaterialIcons
+                        name={
+                          favoritedCareers.includes(career.id)
+                            ? "favorite"
+                            : "favorite-border"
+                        }
+                        size={20}
+                        color={
+                          favoritedCareers.includes(career.id)
+                            ? "#D4AF37"
+                            : colors.textLight
+                        }
+                      />
+                    </InteractiveWrapper>
+                  </InteractiveWrapper>
+                ))}
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 // ---------------- STYLES -------------------
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     flex: 1,
     padding: 20,
   },
   containerMobile: {
     padding: 12,
+  },
+  scrollContent: {
+    paddingBottom: 28,
   },
 
   topRow: {
@@ -449,6 +483,10 @@ const styles = StyleSheet.create({
   chipRow: {
     marginTop: 4,
     marginBottom: 10,
+  },
+  chipContent: {
+    paddingRight: 12,
+    gap: 8,
   },
 
   chip: {
@@ -503,6 +541,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#F2F4F5",
     borderRadius: 16,
     padding: 16,
+    paddingTop: 20, // Extra top padding for match badge
+    paddingBottom: 20, // Extra bottom padding for favorite icon
     borderWidth: 1,
     borderColor: "#E0E4E7",
     shadowColor: colors.accent,
@@ -512,6 +552,7 @@ const styles = StyleSheet.create({
     elevation: 4,
     position: "relative",
     marginBottom: 16,
+    minHeight: 140, // Ensure consistent card height
 
     // ⭐ Smooth hover animation for Web
     ...(Platform.OS === "web" && {
@@ -523,6 +564,8 @@ const styles = StyleSheet.create({
   cardMobile: {
     width: "100%",
     padding: 14,
+    paddingTop: 18,
+    paddingBottom: 18,
   },
   cardTablet: {
     width: "48%",
@@ -541,11 +584,18 @@ const styles = StyleSheet.create({
     borderColor: colors.accent,
   },
 
+  cardContent: {
+    flex: 1,
+    paddingRight: 60, // Space for favorite icon
+  },
+
   cardTitle: {
     fontSize: 15,
     fontWeight: "700",
     color: colors.primary,
     marginBottom: 4,
+    paddingRight: 60, // Space for match badge
+    marginTop: 0,
   },
 
   cardTags: {
@@ -562,20 +612,20 @@ const styles = StyleSheet.create({
 
   favoriteIcon: {
     position: "absolute",
-    bottom: 5,
-    right: 20,
+    bottom: 12,
+    right: 16,
     zIndex: 1,
     padding: 8,
-    minWidth: 44,
-    minHeight: 44,
+    minWidth: 40,
+    minHeight: 40,
     justifyContent: "center",
     alignItems: "center",
   },
 
   matchBadge: {
     position: "absolute",
-    top: 10,
-    right: 10,
+    top: 12,
+    right: 16,
     width: 50,
     height: 50,
     borderRadius: 25,
@@ -587,6 +637,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 10,
     elevation: 4,
+    zIndex: 2,
   },
 
   matchBadgeValue: {

@@ -8,6 +8,7 @@ import DashboardShell from "../screens/DashboardShell";
 import CareerDetailsScreen from "../screens/CareerDetailsScreen";
 import InternshipDetailsScreen from "../screens/InternshipDetailsScreen";
 import CareerRoadmapScreen from "../screens/CareerRoadmapScreen";
+import ComparisonScreen from "../screens/ComparisonScreen";
 
 import { auth, db } from "../services/firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
@@ -54,6 +55,7 @@ export default function AppNavigator() {
             <Stack.Screen name="CareerDetails" component={CareerDetailsScreen} />
             <Stack.Screen name="InternshipDetails" component={InternshipDetailsScreen} />
             <Stack.Screen name="CareerRoadmap" component={CareerRoadmapScreen} />
+            <Stack.Screen name="Comparison" component={ComparisonScreen} />
           </>
         )}
       </Stack.Navigator>

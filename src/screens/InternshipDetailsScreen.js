@@ -12,16 +12,77 @@ import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../theme/colors";
 import FavoritesService from "../services/favoritesService";
 import ApplicationTrackerService from "../services/applicationTrackerService";
+import SmartSuggestions from "../components/SmartSuggestions";
+import InternshipAPI from "../services/internshipAPI";
+import RealInternshipAPI from "../services/realInternshipAPI";
+import WebScrapingAPI from "../services/webScrapingAPI";
+import { auth, db } from "../services/firebaseConfig";
+import { ref, onValue } from "firebase/database";
 
 export default function InternshipDetailsScreen({ route, navigation }) {
   const { job } = route.params;
   const [isFavorited, setIsFavorited] = useState(false);
   const [isTracked, setIsTracked] = useState(false);
+  const [allInternships, setAllInternships] = useState([]);
+  const [userSkills, setUserSkills] = useState([]);
 
   useEffect(() => {
     checkFavoriteStatus();
     checkTrackedStatus();
+    loadAllInternships();
+    loadUserSkills();
   }, []);
+
+  const loadUserSkills = () => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userRef = ref(db, "users/" + user.uid);
+    onValue(userRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data?.skills) {
+        const skills = Array.isArray(data.skills) ? data.skills : [data.skills];
+        setUserSkills(skills);
+      }
+    });
+  };
+
+  const loadAllInternships = async () => {
+    try {
+      // Fetch from multiple sources
+      const [mockResult, realResult, scrapedResult] = await Promise.allSettled([
+        InternshipAPI.fetchInternships({}),
+        RealInternshipAPI.fetchInternships({}),
+        WebScrapingAPI.scrapeAllSources({}),
+      ]);
+
+      let results = [];
+      if (mockResult.status === "fulfilled" && mockResult.value.success) {
+        results = [...results, ...mockResult.value.data];
+      }
+      if (realResult.status === "fulfilled" && realResult.value.success) {
+        results = [...results, ...realResult.value.data];
+      }
+      if (scrapedResult.status === "fulfilled" && scrapedResult.value.success) {
+        results = [...results, ...scrapedResult.value.data];
+      }
+
+      // Remove duplicates
+      const uniqueResults = results.filter(
+        (item, index, self) =>
+          index ===
+          self.findIndex(
+            (j) =>
+              j.title.toLowerCase() === item.title.toLowerCase() &&
+              j.company.toLowerCase() === item.company.toLowerCase()
+          )
+      );
+
+      setAllInternships(uniqueResults);
+    } catch (error) {
+      console.error("Error loading internships for suggestions:", error);
+    }
+  };
 
   const checkFavoriteStatus = async () => {
     const favorited = await FavoritesService.isInternshipFavorited(job.id);
@@ -180,6 +241,16 @@ export default function InternshipDetailsScreen({ route, navigation }) {
           <MaterialIcons name="send" size={20} color={colors.white} />
           <Text style={styles.applyButtonText}>Apply Now</Text>
         </TouchableOpacity>
+
+        {/* Smart Suggestions */}
+        <SmartSuggestions
+          currentInternship={job}
+          allInternships={allInternships}
+          userSkills={userSkills}
+          onSelect={(selectedJob) => {
+            navigation.replace("InternshipDetails", { job: selectedJob });
+          }}
+        />
       </View>
     </ScrollView>
   );

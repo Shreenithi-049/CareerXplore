@@ -1,12 +1,22 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from "expo-file-system";
 import colors from "../theme/colors";
 import { AIService } from "../services/aiService";
+import InteractiveWrapper from "./InteractiveWrapper";
 
 export default function ResumeUploader({ resume, onUpload, disabled = false }) {
   const [uploading, setUploading] = useState(false);
+
+  const copyToDocuments = async (uri, fileName) => {
+    const dir = FileSystem.documentDirectory + "resumes/";
+    await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+    const dest = `${dir}${fileName || "resume.pdf"}`;
+    await FileSystem.copyAsync({ from: uri, to: dest });
+    return dest;
+  };
 
   const pickDocument = async () => {
     if (disabled) return;
@@ -22,6 +32,10 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
       if (!result.canceled && result.assets && result.assets[0]) {
         const file = result.assets[0];
         
+        const safeFileName = file.name || `resume-${Date.now()}.pdf`;
+        const storedUri = await copyToDocuments(file.uri, safeFileName);
+        const mimeType = file.mimeType || "application/pdf";
+
         const response = await fetch(file.uri);
         const blob = await response.blob();
         const base64 = await new Promise((resolve) => {
@@ -33,7 +47,9 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
         const resumeData = {
           fileName: file.name,
           uri: file.uri,
+          storedUri,
           size: file.size,
+          mimeType,
           base64Data: base64,
           extractedData: null,
           uploadDate: new Date().toISOString()
@@ -82,17 +98,17 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
           
           {!disabled && (
             <View style={styles.resumeActions}>
-              <TouchableOpacity style={styles.actionButton} onPress={pickDocument}>
+              <InteractiveWrapper style={styles.actionButton} onPress={pickDocument}>
                 <MaterialIcons name="refresh" size={16} color={colors.white} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton} onPress={removeResume}>
+              </InteractiveWrapper>
+              <InteractiveWrapper style={styles.actionButton} onPress={removeResume}>
                 <MaterialIcons name="delete" size={16} color={colors.white} />
-              </TouchableOpacity>
+              </InteractiveWrapper>
             </View>
           )}
         </View>
       ) : (
-        <TouchableOpacity 
+        <InteractiveWrapper 
           style={[styles.uploadArea, disabled && styles.uploadAreaDisabled]} 
           onPress={pickDocument}
           disabled={disabled || uploading}
@@ -110,7 +126,7 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
               Upload your resume for record keeping
             </Text>
           )}
-        </TouchableOpacity>
+        </InteractiveWrapper>
       )}
     </View>
   );

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import colors from "../theme/colors";
 import ScreenHeader from "../components/ScreenHeader";
 import ProfileNotification from "../components/ProfileNotification";
@@ -9,6 +10,7 @@ import DailyXPCard from "../components/DailyXPCard";
 import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue } from "firebase/database";
 import { useResponsive } from "../utils/useResponsive";
+import HeaderBanner from "../components/HeaderBanner";
 
 export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePage }) {
   const [fullName, setFullName] = useState("");
@@ -30,64 +32,84 @@ export default function HomeScreen({ showHamburger, onToggleSidebar, setActivePa
   }, []);
 
   return (
-    <View style={[styles.container, isMobile && styles.containerMobile]}>
-      <ScreenHeader 
-        title="CareerXplore" 
-        subtitle="Unlock Your Perfect Career Path" 
-        showHamburger={showHamburger}
-        onToggleSidebar={onToggleSidebar}
-        showLogo={true}
-      />
-      
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <ProfileNotification 
-          onNavigateToProfile={() => setActivePage('Profile')}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={[styles.container, isMobile && styles.containerMobile]}>
+        <ScreenHeader 
+          title="CareerXplore" 
+          subtitle="Unlock Your Perfect Career Path" 
+          showHamburger={showHamburger}
+          onToggleSidebar={onToggleSidebar}
+          showLogo={true}
         />
         
-        <Text style={[styles.greeting, isMobile && styles.greetingMobile]}>
-          Hello, {fullName || "User"}! 👋
-        </Text>
-        
-        <DailyXPCard 
-          dailyXP={dailyXP} 
-          motivationalText="Keep exploring careers to earn more XP!" 
-        />
-        
-        <GamificationCard />
-        
-        <TrackerWidget onNavigate={() => setActivePage('Tracker')} />
-        
-        <Text style={styles.sectionTitle}>Overview</Text>
-        <Text style={styles.text}>
-          Use the navigation menu (left) to explore:
-        </Text>
-        <Text style={styles.bullet}>• Career recommendations based on your skills</Text>
-        <Text style={styles.bullet}>• Matching internships</Text>
-        <Text style={styles.bullet}>• Track your applications</Text>
-        <Text style={styles.bullet}>• View your performance</Text>
-        <Text style={styles.bullet}>• Your profile details & updates</Text>
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <HeaderBanner
+            image={require("../../assets/homepage.jpg")}
+            title="Shape your next career move"
+            subtitle="Stay on track with your learning, XP goals, and applications"
+            height={isMobile ? 200 : 260}
+            overlayOpacity={0.2}
+          />
 
-        <View className="spacer" style={{ height: 12 }} />
-
-        <View style={styles.tipBox}>
-          <Text style={styles.tipTitle}>Tip</Text>
-          <Text style={styles.tipText}>
-            Keep your skills and education updated for better recommendations and
-            internship matches.
+          <ProfileNotification 
+            onNavigateToProfile={() => setActivePage('Profile')}
+          />
+          
+          <Text style={[styles.greeting, isMobile && styles.greetingMobile]}>
+            Hello, {fullName || "User"}! 👋
           </Text>
-        </View>
-      </ScrollView>
-    </View>
+          
+          <DailyXPCard 
+            dailyXP={dailyXP} 
+            motivationalText="Keep exploring careers to earn more XP!" 
+          />
+          
+          <GamificationCard />
+          
+          <TrackerWidget onNavigate={() => setActivePage('Tracker')} />
+          
+          <Text style={styles.sectionTitle}>Overview</Text>
+          <Text style={styles.text}>
+            Use the navigation menu (left) to explore:
+          </Text>
+          <Text style={styles.bullet}>• Career recommendations based on your skills</Text>
+          <Text style={styles.bullet}>• Matching internships</Text>
+          <Text style={styles.bullet}>• Track your applications</Text>
+          <Text style={styles.bullet}>• View your performance</Text>
+          <Text style={styles.bullet}>• Your profile details & updates</Text>
+
+          <View className="spacer" style={{ height: 12 }} />
+
+          <View style={styles.tipBox}>
+            <Text style={styles.tipTitle}>Tip</Text>
+            <Text style={styles.tipText}>
+              Keep your skills and education updated for better recommendations and
+              internship matches.
+            </Text>
+          </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     flex: 1,
     padding: 20,
   },
   containerMobile: {
     padding: 12,
+  },
+  scrollContent: {
+    paddingBottom: 32,
   },
   greeting: {
     fontSize: 20,

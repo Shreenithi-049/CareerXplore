@@ -1,20 +1,22 @@
 // src/components/Button.js
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet } from "react-native";
+import { Text, StyleSheet } from "react-native";
 import colors from "../theme/colors";
 import { useResponsive } from "../utils/useResponsive";
+import InteractiveWrapper from "./InteractiveWrapper";
 
 export default function Button({ title, onPress, style, textStyle }) {
   const { isMobile } = useResponsive();
-  
+
   return (
-    <TouchableOpacity 
-      style={[styles.btn, isMobile && styles.btnMobile, style]} 
+    <InteractiveWrapper
       onPress={onPress}
-      activeOpacity={0.7}
+      style={[styles.btn, isMobile && styles.btnMobile, style]}
+      androidRippleColor={colors.white + "33"}
+      pressedStyle={styles.btnPressed}
     >
       <Text style={[styles.btnText, textStyle]}>{title}</Text>
-    </TouchableOpacity>
+    </InteractiveWrapper>
   );
 }
 
@@ -41,5 +43,8 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     fontWeight: "700",
+  },
+  btnPressed: {
+    transform: [{ scale: 0.995 }],
   },
 });

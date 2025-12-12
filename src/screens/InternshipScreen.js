@@ -4,12 +4,12 @@ import {
   Text,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   ActivityIndicator,
   RefreshControl,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useResponsive } from "../utils/useResponsive";
 import { MaterialIcons } from "@expo/vector-icons";
 import { auth, db } from "../services/firebaseConfig";
@@ -22,6 +22,13 @@ import { isProfileComplete } from "../utils/profileUtils";
 import RealInternshipAPI from "../services/realInternshipAPI";
 import WebScrapingAPI from "../services/webScrapingAPI";
 import FavoritesService from "../services/favoritesService";
+import FilterModal from "../components/FilterModal";
+import InteractiveWrapper from "../components/InteractiveWrapper";
+import HeaderBanner from "../components/HeaderBanner";
+import CompareToggle from "../components/CompareToggle";
+import CompareBar from "../components/CompareBar";
+import { useComparison } from "../context/ComparisonContext";
+import { Alert } from "react-native";
 
 const isWeb = Platform.OS === "web";
 
@@ -37,7 +44,10 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
   const [lastProfileUpdate, setLastProfileUpdate] = useState(null);
   const [favoritedInternships, setFavoritedInternships] = useState([]);
   const [hoveredId, setHoveredId] = useState(null);
+  const [filters, setFilters] = useState({});
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
   const { isMobile } = useResponsive();
+  const { addToCompare } = useComparison();
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -165,6 +175,59 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
     setSearch(text);
   };
 
+  const stipendToNumber = (stipend) => {
+    if (!stipend) return null;
+    const digits = stipend.replace(/[^\d]/g, "");
+    return digits ? parseInt(digits, 10) : null;
+  };
+
+  const matchesFilters = (job) => {
+    if (!job) return false;
+
+    if (filters.locations && filters.locations.length > 0) {
+      const locationText = (job.location || "").toLowerCase();
+      const locationMatch = filters.locations.some((loc) =>
+        locationText.includes(loc.toLowerCase())
+      );
+      if (!locationMatch) return false;
+    }
+
+    if (filters.types && filters.types.length > 0) {
+      const typeText = (job.type || "").toLowerCase();
+      const typeMatch = filters.types.some((t) =>
+        typeText.includes(t.toLowerCase())
+      );
+      if (!typeMatch) return false;
+    }
+
+    if (filters.durations && filters.durations.length > 0) {
+      const durationText = (job.duration || "").toLowerCase();
+      const durationMatch = filters.durations.some((d) => {
+        if (d === "1-3 months") return durationText.includes("1") || durationText.includes("2") || durationText.includes("3");
+        if (d === "3-6 months") return durationText.includes("3") || durationText.includes("4") || durationText.includes("5") || durationText.includes("6");
+        if (d === "6+ months") return durationText.includes("6") || durationText.includes("12");
+        return false;
+      });
+      if (!durationMatch) return false;
+    }
+
+    if (filters.stipends && filters.stipends.length > 0) {
+      const amount = stipendToNumber(job.stipend);
+      if (amount) {
+        const stipendMatch = filters.stipends.some((range) => {
+          if (range === "< ₹10,000") return amount < 10000;
+          if (range === "₹10k - ₹15k") return amount >= 10000 && amount <= 15000;
+          if (range === "₹15k - ₹20k") return amount > 15000 && amount <= 20000;
+          if (range === "> ₹20k") return amount > 20000;
+          return false;
+        });
+        if (!stipendMatch) return false;
+      }
+    }
+
+    return true;
+  };
+
   const getDisplayedList = () => {
     let filtered = internships;
     
@@ -184,6 +247,11 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
         job.location.toLowerCase().includes(term)
       );
     }
+
+    // Apply advanced filters
+    if (filters && Object.keys(filters).length > 0) {
+      filtered = filtered.filter(matchesFilters);
+    }
     
     return filtered;
   };
@@ -191,180 +259,224 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
   const list = getDisplayedList();
 
   return (
-    <View style={[styles.container, isMobile && styles.containerMobile]}>
-      <ScreenHeader 
-        title="Internships" 
-        subtitle="Live opportunities from multiple sources"
-        showHamburger={showHamburger}
-        onToggleSidebar={onToggleSidebar}
-        showLogo={true}
-      />
-      {!profileComplete && (
-        <ProfileNotification onNavigateToProfile={() => setActivePage && setActivePage('Profile')} />
-      )}
-      
-      {/* Search + Filter row */}
-      <View style={styles.topRow}>
-        <TextInput
-          style={[styles.searchInput, isMobile && styles.searchInputMobile]}
-          placeholder="Search title, company, location"
-          placeholderTextColor={colors.textLight}
-          value={search}
-          onChangeText={handleSearch}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={[styles.container, isMobile && styles.containerMobile]}>
+        <ScreenHeader 
+          title="Internships" 
+          subtitle="Live opportunities from multiple sources"
+          showHamburger={showHamburger}
+          onToggleSidebar={onToggleSidebar}
+          showLogo={true}
         />
+        {!profileComplete && (
+          <ProfileNotification onNavigateToProfile={() => setActivePage && setActivePage('Profile')} />
+        )} 
         
-        <TouchableOpacity style={[styles.refreshButton, isMobile && styles.refreshButtonMobile]} onPress={onRefresh}>
-          <MaterialIcons name="refresh" size={20} color={colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.filterRow}>
-        <TouchableOpacity
-          style={[
-            styles.filterChip,
-            isMobile && styles.filterChipMobile,
-            filterMode === "recommended" && styles.filterChipActive,
-          ]}
-          onPress={() => handleFilterChange("recommended")}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
         >
-          <Text
-            style={[
-              styles.filterText,
-              filterMode === "recommended" && styles.filterTextActive,
-            ]}
-          >
-            Recommended
-          </Text>
-        </TouchableOpacity>
+          <HeaderBanner
+            image={require("../../assets/internship_header.jpeg")}
+            title="Internships that match your path"
+            subtitle="Apply filters by stipend, type, duration, and location"
+            height={isMobile ? 200 : 260}
+            overlayOpacity={0.2}
+          />
 
-        <TouchableOpacity
-          style={[
-            styles.filterChip,
-            isMobile && styles.filterChipMobile,
-            filterMode === "all" && styles.filterChipActive,
-          ]}
-          onPress={() => handleFilterChange("all")}
-        >
-          <Text
-            style={[
-              styles.filterText,
-              filterMode === "all" && styles.filterTextActive,
-            ]}
-          >
-            All Latest
-          </Text>
-        </TouchableOpacity>
+          {/* Search + Filter row */}
+          <View style={styles.topRow}>
+            <TextInput
+              style={[styles.searchInput, isMobile && styles.searchInputMobile]}
+              placeholder="Search title, company, location"
+              placeholderTextColor={colors.textLight}
+              value={search}
+              onChangeText={handleSearch}
+            />
+            
+            <InteractiveWrapper
+              style={[styles.iconButton, isMobile && styles.iconButtonMobile]}
+              onPress={() => setShowFilterSheet(true)}
+              androidRippleColor={colors.accent + "33"}
+            >
+              <MaterialIcons name="filter-list" size={20} color={colors.primary} />
+            </InteractiveWrapper>
 
-        <TouchableOpacity
-          style={[
-            styles.filterChip,
-            isMobile && styles.filterChipMobile,
-            filterMode === "favorites" && styles.filterChipActive,
-          ]}
-          onPress={() => handleFilterChange("favorites")}
-        >
-          <Text
-            style={[
-              styles.filterText,
-              filterMode === "favorites" && styles.filterTextActive,
-            ]}
-          >
-            Favorites
-          </Text>
-        </TouchableOpacity>
-      </View>
+            <InteractiveWrapper
+              style={[styles.iconButton, isMobile && styles.iconButtonMobile]}
+              onPress={onRefresh}
+              androidRippleColor={colors.accent + "33"}
+            >
+              <MaterialIcons name="refresh" size={20} color={colors.primary} />
+            </InteractiveWrapper>
+          </View>
 
-      {/* Loading indicator */}
-      {loading && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.accent} />
-          <Text style={styles.loadingText}>Fetching from multiple sources...</Text>
-          <Text style={styles.loadingSubtext}>APIs • Web Scraping • Live Data</Text>
-        </View>
-      )}
-
-      {/* Internship list */}
-      {!loading && (
-        <ScrollView 
-          style={styles.list}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          {list.length > 0 ? (
-            list.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                style={[styles.card, hoveredId === item.id && styles.cardHovered]}
-                onPress={() =>
-                  navigation.navigate("InternshipDetails", { job: item })
-                }
-                {...(isWeb && {
-                  onMouseEnter: () => setHoveredId(item.id),
-                  onMouseLeave: () => setHoveredId(null),
-                })}
+          <View style={styles.filterRow}>
+            <InteractiveWrapper
+              style={[
+                styles.filterChip,
+                isMobile && styles.filterChipMobile,
+                filterMode === "recommended" && styles.filterChipActive,
+              ]}
+              onPress={() => handleFilterChange("recommended")}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  filterMode === "recommended" && styles.filterTextActive,
+                ]}
               >
-                <View style={styles.cardHeader}>
-                  <MaterialIcons name="work" size={24} color={colors.primary} />
-                  <View style={styles.cardHeaderRight}>
-                    {item.matchScore && (
-                      <View style={styles.matchBadge}>
-                        <Text style={styles.matchText}>{item.matchScore}% match</Text>
+                Recommended
+              </Text>
+            </InteractiveWrapper>
+
+            <InteractiveWrapper
+              style={[
+                styles.filterChip,
+                isMobile && styles.filterChipMobile,
+                filterMode === "all" && styles.filterChipActive,
+              ]}
+              onPress={() => handleFilterChange("all")}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  filterMode === "all" && styles.filterTextActive,
+                ]}
+              >
+                All Latest
+              </Text>
+            </InteractiveWrapper>
+
+            <InteractiveWrapper
+              style={[
+                styles.filterChip,
+                isMobile && styles.filterChipMobile,
+                filterMode === "favorites" && styles.filterChipActive,
+              ]}
+              onPress={() => handleFilterChange("favorites")}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  filterMode === "favorites" && styles.filterTextActive,
+                ]}
+              >
+                Favorites
+              </Text>
+            </InteractiveWrapper>
+          </View>
+
+          {/* Loading indicator */}
+          {loading && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={colors.accent} />
+              <Text style={styles.loadingText}>Fetching from multiple sources...</Text>
+              <Text style={styles.loadingSubtext}>APIs • Web Scraping • Live Data</Text>
+            </View>
+          )}
+
+          {/* Internship list */}
+          {!loading && (
+            <ScrollView 
+              style={styles.list}
+              contentContainerStyle={styles.listContent}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+            >
+              {list.length > 0 ? (
+                list.map((item) => (
+                  <InteractiveWrapper
+                    key={item.id}
+                    style={[styles.card, hoveredId === item.id && styles.cardHovered]}
+                    onPress={() =>
+                      navigation.navigate("InternshipDetails", { job: item })
+                    }
+                    {...(isWeb && {
+                      onMouseEnter: () => setHoveredId(item.id),
+                      onMouseLeave: () => setHoveredId(null),
+                    })}
+                  >
+                    <View style={styles.cardHeader}>
+                      <MaterialIcons name="work" size={24} color={colors.primary} />
+                      <View style={styles.cardHeaderRight}>
+                        {item.matchScore && (
+                          <View style={styles.matchBadge}>
+                            <Text style={styles.matchText}>{item.matchScore}% match</Text>
+                          </View>
+                        )}
+                        <CompareToggle internship={item} style={styles.compareToggle} />
+                        <InteractiveWrapper onPress={(e) => toggleFavorite(e, item)} hitSlop={8} style={styles.iconCircle}>
+                          <MaterialIcons 
+                            name={favoritedInternships.includes(item.id) ? "favorite" : "favorite-border"} 
+                            size={20} 
+                            color={favoritedInternships.includes(item.id) ? "#D4AF37" : colors.textLight} 
+                          />
+                        </InteractiveWrapper>
                       </View>
-                    )}
-                    <TouchableOpacity onPress={(e) => toggleFavorite(e, item)}>
-                      <MaterialIcons 
-                        name={favoritedInternships.includes(item.id) ? "favorite" : "favorite-border"} 
-                        size={20} 
-                        color={favoritedInternships.includes(item.id) ? "#D4AF37" : colors.textLight} 
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                
-                <View style={styles.cardContent}>
-                  <Text style={styles.jobTitle}>{item.title}</Text>
-                  <Text style={styles.company}>{item.company}</Text>
-                  
-                  <View style={styles.metaRow}>
-                    <Text style={styles.location}>{item.location}</Text>
-                    <Text style={styles.type}>{item.type}</Text>
-                  </View>
-                  
-                  <Text style={styles.stipend}>{item.stipend}</Text>
-                  
-                  <View style={styles.skillsContainer}>
-                    {item.skills.slice(0, 3).map((skill, idx) => (
-                      <View key={idx} style={styles.skillTag}>
-                        <Text style={styles.skillText}>{skill}</Text>
-                      </View>
-                    ))}
-                    {item.skills.length > 3 && (
-                      <Text style={styles.moreSkills}>+{item.skills.length - 3} more</Text>
-                    )}
-                  </View>
-                  
-                  {item.source && (
-                    <View style={styles.sourceContainer}>
-                      <MaterialIcons name="source" size={12} color={colors.textLight} />
-                      <Text style={styles.sourceText}>{item.source}</Text>
                     </View>
-                  )}
-                </View>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <Text style={styles.noData}>
-              No internships found. Try refreshing or updating your skills.
-            </Text>
+                    
+                    <View style={styles.cardContent}>
+                      <Text style={styles.jobTitle}>{item.title}</Text>
+                      <Text style={styles.company}>{item.company}</Text>
+                      
+                      <View style={styles.metaRow}>
+                        <Text style={styles.location}>{item.location}</Text>
+                        <Text style={styles.type}>{item.type}</Text>
+                      </View>
+                      
+                      <Text style={styles.stipend}>{item.stipend}</Text>
+                      
+                      <View style={styles.skillsContainer}>
+                        {item.skills.slice(0, 3).map((skill, idx) => (
+                          <View key={idx} style={styles.skillTag}>
+                            <Text style={styles.skillText}>{skill}</Text>
+                          </View>
+                        ))}
+                        {item.skills.length > 3 && (
+                          <Text style={styles.moreSkills}>+{item.skills.length - 3} more</Text>
+                        )}
+                      </View>
+                      
+                      {item.source && (
+                        <View style={styles.sourceContainer}>
+                          <MaterialIcons name="source" size={12} color={colors.textLight} />
+                          <Text style={styles.sourceText}>{item.source}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </InteractiveWrapper>
+                ))
+              ) : (
+                <Text style={styles.noData}>
+                  No internships found. Try refreshing or updating your skills.
+                </Text>
+              )}
+            </ScrollView>
           )}
         </ScrollView>
-      )}
-    </View>
+
+        <FilterModal
+          visible={showFilterSheet}
+          onClose={() => setShowFilterSheet(false)}
+          onApply={(values) => setFilters(values)}
+          initial={filters}
+        />
+
+        <CompareBar
+          onComparePress={() => navigation.navigate("Comparison")}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     flex: 1,
     padding: 20,
@@ -372,11 +484,14 @@ const styles = StyleSheet.create({
   containerMobile: {
     padding: 12,
   },
+  scrollContent: {
+    paddingBottom: 30,
+  },
   topRow: {
     flexDirection: "row",
     marginBottom: 10,
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
   searchInput: {
     flex: 1,
@@ -394,19 +509,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 48,
   },
-  refreshButton: {
-    padding: 8,
-    borderRadius: 8,
+  iconButton: {
+    padding: 10,
+    borderRadius: 10,
     backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.grayBorder,
+    minWidth: 44,
+    minHeight: 44,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  refreshButtonMobile: {
+  iconButtonMobile: {
     padding: 12,
     minWidth: 48,
     minHeight: 48,
-    justifyContent: "center",
-    alignItems: "center",
   },
   filterRow: {
     flexDirection: "row",
@@ -457,6 +574,9 @@ const styles = StyleSheet.create({
   list: {
     flex: 1,
   },
+  listContent: {
+    paddingBottom: 100, // Extra padding for CompareBar
+  },
   card: {
     backgroundColor: colors.card,
     borderRadius: 12,
@@ -490,6 +610,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+  },
+  compareToggle: {
+    marginRight: 4,
+  },
+  iconCircle: {
+    padding: 8,
+    borderRadius: 14,
+    backgroundColor: colors.grayLight,
+    borderWidth: 1,
+    borderColor: colors.grayBorder,
+    minHeight: 0,
   },
   matchBadge: {
     backgroundColor: colors.accent + "20",
