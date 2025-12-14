@@ -13,6 +13,7 @@ import ProfileScreen from "../screens/ProfileScreen";
 import InternshipScreen from "../screens/InternshipScreen";
 import ApplicationTrackerScreen from "../screens/ApplicationTrackerScreen";
 import AnalyticsScreen from "../screens/AnalyticsScreen";
+import HelpScreen from "../screens/HelpScreen";
 import ChatbotWidget from "../components/ChatbotWidget";
 import colors from "../theme/colors";
 
@@ -83,6 +84,8 @@ export default function DashboardShell({ navigation }) {
         return <AnalyticsScreen {...commonProps} />;
       case "Profile":
         return <ProfileScreen {...commonProps} />;
+      case "Help":
+        return <HelpScreen {...commonProps} />;
       default:
         return <HomeScreen {...commonProps} />;
     }
@@ -90,7 +93,7 @@ export default function DashboardShell({ navigation }) {
 
   return (
     <View style={styles.container}>
-      
+
       {/* Sidebar sliding panel */}
       <Animated.View
         style={[
@@ -123,7 +126,7 @@ export default function DashboardShell({ navigation }) {
             activeOpacity={1}
             onPress={() => setSidebarVisible(false)}
             {...(Platform.OS === "web"
-              ? { onMouseEnter: () => {}, style: styles.backdropHover }
+              ? { onMouseEnter: () => { }, style: styles.backdropHover }
               : {})}
           />
         )}

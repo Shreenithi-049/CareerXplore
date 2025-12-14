@@ -27,9 +27,20 @@ export const awardXP = async (action, amount = null) => {
   const userRef = ref(db, `users/${user.uid}`);
 
   await update(userRef, { xp: increment(xpAmount) });
-  
+
   const snapshot = await get(userRef);
-  await checkAndAwardBadges(user.uid, snapshot.val());
+  const userData = snapshot.val();
+
+  // Update Level based on new XP
+  const currentXP = userData.xp || 0;
+  const newLevel = Math.floor(currentXP / 300) + 1;
+  const oldLevel = userData.level || 1;
+
+  if (newLevel > oldLevel) {
+    await update(userRef, { level: newLevel });
+  }
+
+  await checkAndAwardBadges(user.uid, userData);
 };
 
 const checkAndAwardBadges = async (userId, userData) => {
@@ -90,7 +101,7 @@ export const trackAction = async (actionType, value = 1) => {
 
   const userRef = ref(db, `users/${user.uid}`);
   await update(userRef, { [actionType]: increment(value) });
-  
+
   const snapshot = await get(userRef);
   await checkAndAwardBadges(user.uid, snapshot.val());
 };

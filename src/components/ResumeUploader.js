@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Alert } from "react-native";
+import { View, Text, StyleSheet, Alert, Platform } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from "expo-file-system";
@@ -11,6 +11,7 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
   const [uploading, setUploading] = useState(false);
 
   const copyToDocuments = async (uri, fileName) => {
+    if (Platform.OS === 'web') return uri; // Web: Return original URI (blob)
     const dir = FileSystem.documentDirectory + "resumes/";
     await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
     const dest = `${dir}${fileName || "resume.pdf"}`;
@@ -20,18 +21,18 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
 
   const pickDocument = async () => {
     if (disabled) return;
-    
+
     try {
       setUploading(true);
-      
+
       const result = await DocumentPicker.getDocumentAsync({
         type: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
         copyToCacheDirectory: true,
       });
-      
+
       if (!result.canceled && result.assets && result.assets[0]) {
         const file = result.assets[0];
-        
+
         const safeFileName = file.name || `resume-${Date.now()}.pdf`;
         const storedUri = await copyToDocuments(file.uri, safeFileName);
         const mimeType = file.mimeType || "application/pdf";
@@ -43,7 +44,7 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
           reader.onloadend = () => resolve(reader.result.split(',')[1]);
           reader.readAsDataURL(blob);
         });
-        
+
         const resumeData = {
           fileName: file.name,
           uri: file.uri,
@@ -54,10 +55,10 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
           extractedData: null,
           uploadDate: new Date().toISOString()
         };
-        
+
         onUpload(resumeData);
         setUploading(false);
-        
+
         Alert.alert(
           "Resume Uploaded! 📄",
           "Your resume has been saved successfully."
@@ -95,7 +96,7 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
               </Text>
             </View>
           </View>
-          
+
           {!disabled && (
             <View style={styles.resumeActions}>
               <InteractiveWrapper style={styles.actionButton} onPress={pickDocument}>
@@ -108,15 +109,15 @@ export default function ResumeUploader({ resume, onUpload, disabled = false }) {
           )}
         </View>
       ) : (
-        <InteractiveWrapper 
-          style={[styles.uploadArea, disabled && styles.uploadAreaDisabled]} 
+        <InteractiveWrapper
+          style={[styles.uploadArea, disabled && styles.uploadAreaDisabled]}
           onPress={pickDocument}
           disabled={disabled || uploading}
         >
-          <MaterialIcons 
-            name={uploading ? "hourglass-empty" : "cloud-upload"} 
-            size={32} 
-            color={disabled ? colors.textLight : colors.accent} 
+          <MaterialIcons
+            name={uploading ? "hourglass-empty" : "cloud-upload"}
+            size={32}
+            color={disabled ? colors.textLight : colors.accent}
           />
           <Text style={[styles.uploadText, disabled && styles.uploadTextDisabled]}>
             {uploading ? "Processing resume..." : "Upload Resume (PDF/DOC)"}

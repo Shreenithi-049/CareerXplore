@@ -23,7 +23,7 @@ Respond ONLY in JSON format:
 }`;
 
       console.log("Calling Gemini API...");
-      
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
         {
@@ -52,7 +52,7 @@ Respond ONLY in JSON format:
         console.log("Available models:", modelsData);
         const modelNames = modelsData.models?.map(m => m.name).slice(0, 10);
         console.log("First 10 model names:", modelNames);
-        
+
         throw new Error(data.error?.message || "API request failed");
       }
 
@@ -90,7 +90,7 @@ Respond ONLY in JSON format:
     } catch (e) {
       console.error("JSON parse error:", e);
     }
-    
+
     return {
       whyRecommended: "This career matches your profile.",
       skillGaps: ["Data Structures", "System Design", "Cloud Computing"],
@@ -101,10 +101,10 @@ Respond ONLY in JSON format:
 
   async generateCareerRoadmap(userProfile, career, userSkills) {
     try {
-      const matchedSkills = career.requiredSkills?.filter(s => 
+      const matchedSkills = career.requiredSkills?.filter(s =>
         userSkills?.map(x => x.toLowerCase()).includes(s.toLowerCase())
       ) || [];
-      const missingSkills = career.requiredSkills?.filter(s => 
+      const missingSkills = career.requiredSkills?.filter(s =>
         !userSkills?.map(x => x.toLowerCase()).includes(s.toLowerCase())
       ) || [];
 
@@ -244,5 +244,74 @@ Senior: $XX,000 (7+ years)`;
     ];
 
     return roadmap;
+  },
+
+  async analyzeResume(resumeBase64, mimeType = "application/pdf") {
+    try {
+      console.log("Starting Resume Analysis...");
+
+      const prompt = `Analyze this resume for a student seeking internships/jobs.
+      Provide a "Resume Score" (0-100) based on content, formatting, and impact.
+      
+      Respond ONLY in JSON format:
+      {
+        "score": 85,
+        "summary": "Brief summary of the resume quality.",
+        "strengths": ["strength1", "strength2"],
+        "weaknesses": ["weakness1", "weakness2"],
+        "suggestions": ["Actionable suggestion 1", "Actionable suggestion 2"]
+      }`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: prompt },
+                {
+                  inline_data: {
+                    mime_type: mimeType,
+                    data: resumeBase64
+                  }
+                }
+              ]
+            }]
+          }),
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || "API failed");
+
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      console.log("AI Analysis Response:", text);
+
+      const analysis = this.parseJSONAnalysis(text);
+      return { success: true, analysis };
+    } catch (error) {
+      console.error("Resume Analysis Error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  parseJSONAnalysis(text) {
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+    } catch (e) {
+      console.error("JSON parse error", e);
+    }
+    return {
+      score: 0,
+      summary: "Could not parse analysis.",
+      strengths: [],
+      weaknesses: [],
+      suggestions: ["Try uploading a clearer PDF."]
+    };
   },
 };

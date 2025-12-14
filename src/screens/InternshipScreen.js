@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Platform,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useResponsive } from "../utils/useResponsive";
@@ -58,14 +59,14 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
       const data = snapshot.val();
       const skills = data?.skills ? (Array.isArray(data.skills) ? data.skills : [data.skills]) : [];
       const interests = data?.interests ? (Array.isArray(data.interests) ? data.interests : [data.interests]) : [];
-      
+
       setUserSkills(skills);
       setUserInterests(interests);
-      
+
       // Check if profile is complete
       const isComplete = isProfileComplete(data);
       setProfileComplete(isComplete);
-      
+
       // Check if profile was recently updated
       const currentUpdate = data?.profileUpdatedAt || data?.lastUpdated;
       if (currentUpdate && currentUpdate !== lastProfileUpdate) {
@@ -91,7 +92,7 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
   const toggleFavorite = async (e, internship) => {
     e.stopPropagation();
     const isFavorited = favoritedInternships.includes(internship.id);
-    
+
     if (isFavorited) {
       await FavoritesService.removeInternshipFromFavorites(internship.id);
     } else {
@@ -103,7 +104,7 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
     try {
       setLoading(true);
       let results = [];
-      
+
       // Fetch from multiple sources in parallel
       const [mockResult, realResult, scrapedResult] = await Promise.allSettled([
         filterMode === "recommended" && skills.length > 0
@@ -116,28 +117,28 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
           ? WebScrapingAPI.getRecommendedFromScraping(skills)
           : WebScrapingAPI.scrapeAllSources({ search })
       ]);
-      
+
       // Combine results from all sources
       if (mockResult.status === 'fulfilled' && mockResult.value.success) {
         results = [...results, ...mockResult.value.data];
       }
-      
+
       if (realResult.status === 'fulfilled' && realResult.value.success) {
         results = [...results, ...realResult.value.data];
       }
-      
+
       if (scrapedResult.status === 'fulfilled' && scrapedResult.value.success) {
         results = [...results, ...scrapedResult.value.data];
       }
-      
+
       // Remove duplicates and sort
       const uniqueResults = results.filter((job, index, self) =>
-        index === self.findIndex(j => 
-          j.title.toLowerCase() === job.title.toLowerCase() && 
+        index === self.findIndex(j =>
+          j.title.toLowerCase() === job.title.toLowerCase() &&
           j.company.toLowerCase() === job.company.toLowerCase()
         )
       );
-      
+
       // Sort by match score (if available) then by date
       uniqueResults.sort((a, b) => {
         if (a.matchScore && b.matchScore && a.matchScore !== b.matchScore) {
@@ -145,9 +146,9 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
         }
         return new Date(b.postedDate) - new Date(a.postedDate);
       });
-      
+
       setInternships(uniqueResults);
-      
+
     } catch (error) {
       console.error("Error loading internships:", error);
       // Fallback to mock data if all APIs fail
@@ -230,18 +231,18 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
 
   const getDisplayedList = () => {
     let filtered = internships;
-    
+
     // Apply filter mode
     if (filterMode === "favorites") {
       filtered = filtered.filter(job => favoritedInternships.includes(job.id));
     } else if (filterMode === "recommended") {
       filtered = filtered.filter(job => job.matchScore && job.matchScore > 0);
     }
-    
+
     // Apply search across all modes
     if (search) {
       const term = search.toLowerCase();
-      filtered = filtered.filter((job) => 
+      filtered = filtered.filter((job) =>
         job.title.toLowerCase().includes(term) ||
         job.company.toLowerCase().includes(term) ||
         job.location.toLowerCase().includes(term)
@@ -252,7 +253,7 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
     if (filters && Object.keys(filters).length > 0) {
       filtered = filtered.filter(matchesFilters);
     }
-    
+
     return filtered;
   };
 
@@ -261,8 +262,8 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={[styles.container, isMobile && styles.containerMobile]}>
-        <ScreenHeader 
-          title="Internships" 
+        <ScreenHeader
+          title="Internships"
           subtitle="Live opportunities from multiple sources"
           showHamburger={showHamburger}
           onToggleSidebar={onToggleSidebar}
@@ -270,192 +271,175 @@ export default function InternshipScreen({ navigation, setActivePage, showHambur
         />
         {!profileComplete && (
           <ProfileNotification onNavigateToProfile={() => setActivePage && setActivePage('Profile')} />
-        )} 
-        
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <HeaderBanner
-            image={require("../../assets/internship_header.jpeg")}
-            title="Internships that match your path"
-            subtitle="Apply filters by stipend, type, duration, and location"
-            height={isMobile ? 200 : 260}
-            overlayOpacity={0.2}
-          />
+        )}
 
-          {/* Search + Filter row */}
-          <View style={styles.topRow}>
-            <TextInput
-              style={[styles.searchInput, isMobile && styles.searchInputMobile]}
-              placeholder="Search title, company, location"
-              placeholderTextColor={colors.textLight}
-              value={search}
-              onChangeText={handleSearch}
-            />
-            
+        {/* FlatList for Optimized Rendering */}
+        <FlatList
+          data={loading ? [] : list}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
             <InteractiveWrapper
-              style={[styles.iconButton, isMobile && styles.iconButtonMobile]}
-              onPress={() => setShowFilterSheet(true)}
-              androidRippleColor={colors.accent + "33"}
+              style={[styles.card, hoveredId === item.id && styles.cardHovered]}
+              onPress={() => navigation.navigate("InternshipDetails", { job: item })}
+              {...(isWeb && {
+                onMouseEnter: () => setHoveredId(item.id),
+                onMouseLeave: () => setHoveredId(null),
+              })}
             >
-              <MaterialIcons name="filter-list" size={20} color={colors.primary} />
-            </InteractiveWrapper>
-
-            <InteractiveWrapper
-              style={[styles.iconButton, isMobile && styles.iconButtonMobile]}
-              onPress={onRefresh}
-              androidRippleColor={colors.accent + "33"}
-            >
-              <MaterialIcons name="refresh" size={20} color={colors.primary} />
-            </InteractiveWrapper>
-          </View>
-
-          <View style={styles.filterRow}>
-            <InteractiveWrapper
-              style={[
-                styles.filterChip,
-                isMobile && styles.filterChipMobile,
-                filterMode === "recommended" && styles.filterChipActive,
-              ]}
-              onPress={() => handleFilterChange("recommended")}
-            >
-              <Text
-                style={[
-                  styles.filterText,
-                  filterMode === "recommended" && styles.filterTextActive,
-                ]}
-              >
-                Recommended
-              </Text>
-            </InteractiveWrapper>
-
-            <InteractiveWrapper
-              style={[
-                styles.filterChip,
-                isMobile && styles.filterChipMobile,
-                filterMode === "all" && styles.filterChipActive,
-              ]}
-              onPress={() => handleFilterChange("all")}
-            >
-              <Text
-                style={[
-                  styles.filterText,
-                  filterMode === "all" && styles.filterTextActive,
-                ]}
-              >
-                All Latest
-              </Text>
-            </InteractiveWrapper>
-
-            <InteractiveWrapper
-              style={[
-                styles.filterChip,
-                isMobile && styles.filterChipMobile,
-                filterMode === "favorites" && styles.filterChipActive,
-              ]}
-              onPress={() => handleFilterChange("favorites")}
-            >
-              <Text
-                style={[
-                  styles.filterText,
-                  filterMode === "favorites" && styles.filterTextActive,
-                ]}
-              >
-                Favorites
-              </Text>
-            </InteractiveWrapper>
-          </View>
-
-          {/* Loading indicator */}
-          {loading && (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={colors.accent} />
-              <Text style={styles.loadingText}>Fetching from multiple sources...</Text>
-              <Text style={styles.loadingSubtext}>APIs • Web Scraping • Live Data</Text>
-            </View>
-          )}
-
-          {/* Internship list */}
-          {!loading && (
-            <ScrollView 
-              style={styles.list}
-              contentContainerStyle={styles.listContent}
-              refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-              }
-            >
-              {list.length > 0 ? (
-                list.map((item) => (
-                  <InteractiveWrapper
-                    key={item.id}
-                    style={[styles.card, hoveredId === item.id && styles.cardHovered]}
-                    onPress={() =>
-                      navigation.navigate("InternshipDetails", { job: item })
-                    }
-                    {...(isWeb && {
-                      onMouseEnter: () => setHoveredId(item.id),
-                      onMouseLeave: () => setHoveredId(null),
-                    })}
-                  >
-                    <View style={styles.cardHeader}>
-                      <MaterialIcons name="work" size={24} color={colors.primary} />
-                      <View style={styles.cardHeaderRight}>
-                        {item.matchScore && (
-                          <View style={styles.matchBadge}>
-                            <Text style={styles.matchText}>{item.matchScore}% match</Text>
-                          </View>
-                        )}
-                        <CompareToggle internship={item} style={styles.compareToggle} />
-                        <InteractiveWrapper onPress={(e) => toggleFavorite(e, item)} hitSlop={8} style={styles.iconCircle}>
-                          <MaterialIcons 
-                            name={favoritedInternships.includes(item.id) ? "favorite" : "favorite-border"} 
-                            size={20} 
-                            color={favoritedInternships.includes(item.id) ? "#D4AF37" : colors.textLight} 
-                          />
-                        </InteractiveWrapper>
-                      </View>
+              <View style={styles.cardHeader}>
+                <MaterialIcons name="work" size={24} color={colors.primary} />
+                <View style={styles.cardHeaderRight}>
+                  {item.matchScore && (
+                    <View style={styles.matchBadge}>
+                      <Text style={styles.matchText}>{item.matchScore}% match</Text>
                     </View>
-                    
-                    <View style={styles.cardContent}>
-                      <Text style={styles.jobTitle}>{item.title}</Text>
-                      <Text style={styles.company}>{item.company}</Text>
-                      
-                      <View style={styles.metaRow}>
-                        <Text style={styles.location}>{item.location}</Text>
-                        <Text style={styles.type}>{item.type}</Text>
-                      </View>
-                      
-                      <Text style={styles.stipend}>{item.stipend}</Text>
-                      
-                      <View style={styles.skillsContainer}>
-                        {item.skills.slice(0, 3).map((skill, idx) => (
-                          <View key={idx} style={styles.skillTag}>
-                            <Text style={styles.skillText}>{skill}</Text>
-                          </View>
-                        ))}
-                        {item.skills.length > 3 && (
-                          <Text style={styles.moreSkills}>+{item.skills.length - 3} more</Text>
-                        )}
-                      </View>
-                      
-                      {item.source && (
-                        <View style={styles.sourceContainer}>
-                          <MaterialIcons name="source" size={12} color={colors.textLight} />
-                          <Text style={styles.sourceText}>{item.source}</Text>
-                        </View>
-                      )}
-                    </View>
+                  )}
+                  <CompareToggle internship={item} style={styles.compareToggle} />
+                  <InteractiveWrapper onPress={(e) => toggleFavorite(e, item)} hitSlop={8} style={styles.iconCircle}>
+                    <MaterialIcons
+                      name={favoritedInternships.includes(item.id) ? "favorite" : "favorite-border"}
+                      size={20}
+                      color={favoritedInternships.includes(item.id) ? "#D4AF37" : colors.textLight}
+                    />
                   </InteractiveWrapper>
-                ))
-              ) : (
-                <Text style={styles.noData}>
-                  No internships found. Try refreshing or updating your skills.
-                </Text>
-              )}
-            </ScrollView>
+                </View>
+              </View>
+
+              <View style={styles.cardContent}>
+                <Text style={styles.jobTitle}>{item.title}</Text>
+                <Text style={styles.company}>{item.company}</Text>
+
+                <View style={styles.metaRow}>
+                  <Text style={styles.location}>{item.location}</Text>
+                  <Text style={styles.type}>{item.type}</Text>
+                </View>
+
+                <Text style={styles.stipend}>{item.stipend}</Text>
+
+                <View style={styles.skillsContainer}>
+                  {item.skills.slice(0, 3).map((skill, idx) => (
+                    <View key={idx} style={styles.skillTag}>
+                      <Text style={styles.skillText}>{skill}</Text>
+                    </View>
+                  ))}
+                  {item.skills.length > 3 && (
+                    <Text style={styles.moreSkills}>+{item.skills.length - 3} more</Text>
+                  )}
+                </View>
+
+                {item.source && (
+                  <View style={styles.sourceContainer}>
+                    <MaterialIcons name="source" size={12} color={colors.textLight} />
+                    <Text style={styles.sourceText}>{item.source}</Text>
+                  </View>
+                )}
+              </View>
+            </InteractiveWrapper>
           )}
-        </ScrollView>
+          ListHeaderComponent={
+            <>
+              <HeaderBanner
+                image={require("../../assets/internship_header.jpeg")}
+                title="Internships that match your path"
+                subtitle="Apply filters by stipend, type, duration, and location"
+                height={isMobile ? 200 : 260}
+                overlayOpacity={0.2}
+              />
+
+              {/* Search + Filter row */}
+              <View style={styles.topRow}>
+                <TextInput
+                  style={[styles.searchInput, isMobile && styles.searchInputMobile]}
+                  placeholder="Search title, company, location"
+                  placeholderTextColor={colors.textLight}
+                  value={search}
+                  onChangeText={handleSearch}
+                />
+
+                <InteractiveWrapper
+                  style={[styles.iconButton, isMobile && styles.iconButtonMobile]}
+                  onPress={() => setShowFilterSheet(true)}
+                  androidRippleColor={colors.accent + "33"}
+                >
+                  <MaterialIcons name="filter-list" size={20} color={colors.primary} />
+                </InteractiveWrapper>
+
+                <InteractiveWrapper
+                  style={[styles.iconButton, isMobile && styles.iconButtonMobile]}
+                  onPress={onRefresh}
+                  androidRippleColor={colors.accent + "33"}
+                >
+                  <MaterialIcons name="refresh" size={20} color={colors.primary} />
+                </InteractiveWrapper>
+              </View>
+
+              <View style={styles.filterRow}>
+                <InteractiveWrapper
+                  style={[
+                    styles.filterChip,
+                    isMobile && styles.filterChipMobile,
+                    filterMode === "recommended" && styles.filterChipActive,
+                  ]}
+                  onPress={() => handleFilterChange("recommended")}
+                >
+                  <Text style={[styles.filterText, filterMode === "recommended" && styles.filterTextActive]}>
+                    Recommended
+                  </Text>
+                </InteractiveWrapper>
+
+                <InteractiveWrapper
+                  style={[
+                    styles.filterChip,
+                    isMobile && styles.filterChipMobile,
+                    filterMode === "all" && styles.filterChipActive,
+                  ]}
+                  onPress={() => handleFilterChange("all")}
+                >
+                  <Text style={[styles.filterText, filterMode === "all" && styles.filterTextActive]}>
+                    All Latest
+                  </Text>
+                </InteractiveWrapper>
+
+                <InteractiveWrapper
+                  style={[
+                    styles.filterChip,
+                    isMobile && styles.filterChipMobile,
+                    filterMode === "favorites" && styles.filterChipActive,
+                  ]}
+                  onPress={() => handleFilterChange("favorites")}
+                >
+                  <Text style={[styles.filterText, filterMode === "favorites" && styles.filterTextActive]}>
+                    Favorites
+                  </Text>
+                </InteractiveWrapper>
+              </View>
+
+              {/* Loading indicator */}
+              {loading && (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={colors.accent} />
+                  <Text style={styles.loadingText}>Fetching from multiple sources...</Text>
+                  <Text style={styles.loadingSubtext}>APIs • Web Scraping • Live Data</Text>
+                </View>
+              )}
+            </>
+          }
+          ListEmptyComponent={
+            !loading && (
+              <Text style={styles.noData}>
+                No internships found. Try refreshing or updating your skills.
+              </Text>
+            )
+          }
+          contentContainerStyle={styles.listContent}
+          initialNumToRender={5}
+          maxToRenderPerBatch={5}
+          windowSize={5}
+          removeClippedSubviews={Platform.OS !== 'web'} // Improve performance on native
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        />
 
         <FilterModal
           visible={showFilterSheet}

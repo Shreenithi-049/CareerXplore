@@ -167,455 +167,97 @@ SmartSuggestions Component
 - Shows reason tags: "Higher stipend", "More skill match", "Closer location"
 - Clicking suggestion navigates to its detail page
 
-4. UI/UX Improvements
-
-Career Card Alignment
-- Fixed match badge positioning (top-right)
-- Fixed favorite icon positioning (bottom-right)
-- Proper spacing between elements (12-16px)
-- Consistent padding and card heights
-- Improved hover effects
-
-Screen Layouts
-- SafeAreaView integration across all screens
-- Proper ScrollView padding for CompareBar
-- Responsive breakpoints (mobile/tablet/desktop)
-- Consistent spacing and margins
-
-🔐 Authentication & Security
-Student Authentication
-createUserWithEmailAndPassword()
-signInWithEmailAndPassword()
-
-Admin Authentication
-
-Email domain check (@careerxplore.com)
-Firebase authentication
-Role verification in DB
-
-🗄️ Database Schema
-{
-  "users": { 
-    "{uid}": { 
-      "fullName": "",
-      "education": "",
-      "skills": [],
-      "interests": [],
-      "resume": {},
-      "profileImage": "",
-      "xp": 0,
-      "badges": [],
-      "profileComplete": false,
-      "lastUpdated": "",
-      "profileUpdatedAt": ""
-    } 
-  },
-  "admins": { "{uid}": { "role": "admin" } },
-  "careers": { "{careerId}": { ... } },
-  "internships": { "pending": {}, "approved": {} },
-  "notifications": { "{id}": { ... } },
-  "favorites": {
-    "{uid}": {
-      "careers": {},
-      "internships": {}
-    }
-  },
-  "applications": {
-    "{uid}": {
-      "{appId}": {
-        "internshipId": "",
-        "title": "",
-        "company": "",
-        "status": "",
-        "appliedDate": ""
-      }
-    }
-  }
-}
-
-🤖 AI Integration
-AI Features
-
-Career insights
-Skill-gap analysis
-Roadmaps
-Resume extraction & ATS scoring
-
-JSON-Based Response Format
-{
-  "whyRecommended": "",
-  "skillGaps": [],
-  "recommendedCourses": [],
-  "futureScope": ""
-}
-
-🎯 Compatibility Score Algorithm
-score = (matchedSkills / totalSkills) * 100
-
-Used for sorting and ranking career recommendations.
-
-📄 Resume Analysis Pipeline
-1. Extract → 2. Score → 3. Recommend
-
-Extract
-
-AI reads resume & returns JSON.
-
-Score
-
-AI generates ATS score + missing skills.
-
-Recommend
-
-AI highlights improvements & strengths.
-
-Resume File Handling
-- Upload via expo-document-picker
-- Store in Firebase with metadata
-- Copy to FileSystem.documentDirectory for mobile access
-- View via WebView with proper MIME types
-- Support for PDF, DOC, DOCX formats
-
-🔒 Firebase Security Rules
-
-Students can only access their own data
-Admins can write careers/internships/notifications
-Auth required for all reads
-Favorites and applications scoped to user
-
-📊 Data Flow
-Career Recommendation Flow
-User Profile → Fetch Careers → Match & Score → AI Insights → Display
-
-Internship Application Flow
-Browse → Filter → Compare (optional) → Apply → Track Status
-
-Comparison Flow
-Select Internships (2-4) → Compare Bar Appears → Click Compare → View Side-by-Side → Apply
-
-Smart Suggestions Flow
-View Internship Details → Load All Internships → Score & Rank → Display Top 5 → Navigate or Compare
-
-🚀 Deployment
-Student App
-expo build:web
-eas build -p android
-eas build -p ios
-
-Hosting
-firebase deploy --only hosting:app
-
-Environment Variables
-GEMINI_API_KEY
-FIREBASE_API_KEY
-
-📦 Dependencies (Updated)
-Core
-- expo: ~51.0.0
-- react: 18.2.0
-- react-native: 0.74.5
-- react-native-web: ~0.19.10
-
-Navigation
-- @react-navigation/native: ^6.1.18
-- @react-navigation/native-stack: ^6.9.28
-
-Firebase
-- firebase: ^10.12.0
-
-AI
-- @google/generative-ai: ^0.24.1
-
-File Handling
-- expo-document-picker: ~12.0.2
-- expo-file-system: (added for resume viewing)
-- react-native-webview: ^13.16.0
-
-UI Components
-- @expo/vector-icons
-- react-native-safe-area-context: 4.10.5
-- react-native-gesture-handler: ~2.16.1
-
-🧪 Testing (Updated)
-Authentication
-
-Signup, login, logout working
-
-Profile
-
-Skills, resume, picture upload
-Resume viewing on mobile (fixed)
-
-AI
-
-Career recommendations
-Skill-gap analysis
-
-Internships
-
-List, details, apply, favorites
-Filtering by location, stipend, type, duration
-Comparison (2-4 internships)
-Smart suggestions
-
-Web
-
-Hover effects (InteractiveWrapper)
-Responsive layout
-Full-width banners
-
-Mobile
-
-Touch feedback (ripple effects)
-PDF viewing
-File system integration
-
-🐛 Troubleshooting
-Issue	Fix
-AI not generating	Check API key & quota
-Firebase denied	Check auth & security rules
-Web hover not working	Ensure Platform.OS === "web" in InteractiveWrapper
-Resume not displaying on mobile	Check FileSystem.documentDirectory path and WebView MIME type
-Comparison limit exceeded	Alert shown, max 4 internships
-Compare bar not appearing	Ensure 2+ internships selected in ComparisonContext
-
-📈 Performance Optimization
-
-Lazy loading screens
-Memoized computations (useMemo for suggestions)
-Reduced bundle size
-Cached images
-Optimized Firebase queries
-Context API for state management (lightweight)
-
-🎮 Gamification System
-XP & Badges
-
-XP awarded instantly via Firebase increment()
-Badges auto-assigned based on XP, skills, views, applications
-
-Badge Types
-- Profile Complete
-- Skill Master
-- Career Explorer
-- Application Starter
-- Resume Uploader
-
-📊 Visual Analytics
-
-Includes:
-
-XP progress
-Badges
-Weekly growth
-Career views
-Applications data
-
-🆕 Comparison Feature Details
-
-Comparison State Management
-- Context-based (ComparisonContext)
-- Maximum 4 internships
-- Persistent during session
-- Cleared on navigation or manual clear
-
-Comparison UI Components
-1. CompareToggle: Small icon button on cards
-2. CompareBar: Sticky bottom bar (conditional)
-3. ComparisonScreen: Full comparison view
-4. SmartSuggestions: AI-powered recommendations
-
-Comparison Algorithm
-- Side-by-side table layout
-- Horizontal scroll for 2-4 items
-- Best value highlighting
-- Responsive column widths
-
-Smart Suggestions Algorithm
-Scoring weights:
-- Higher stipend: 30 points
-- Better skill match: 25 points
-- Same role: 20 points
-- Closer location: 15 points
-- Same type: 10 points
-
-Top 5 suggestions displayed with reason tags.
-
-🔮 Future Enhancements
-
-Push notifications
-Resume builder (AI)
-Interview preparation
-Skill assessments
-Leaderboards
-Networking features
-Comparison history/saved comparisons
-Export comparison as PDF
-
-📞 Support & Maintenance
-
-Firebase monitoring
-Expo analytics
-Regular updates & patches
-File system cleanup for resume storage
-
-📱 Responsive Design
-
-Mobile-first approach
-Breakpoints:
-- Mobile: < 768px
-- Tablet: 768px - 1024px
-- Desktop: > 1024px
-
-Layouts:
-- 1 column (mobile)
-- 2 columns (tablet)
-- 3 columns (desktop)
-
-Touch targets: Minimum 44x44px
-Safe area handling on iOS
-
-🌐 Deployment & Compatibility
-
-Android, iOS, Web supported
-All major browsers supported
-Expo EAS for builds
-Netlify / Vercel / Firebase for web hosting
-
-🔒 Security Checklist
-
-API keys secured
-Role-based access control
-Input validation
-HTTPS enforced
-Firebase rules strict
-File system permissions handled
-Comparison data scoped to user session
-
-📝 Version Summary
-
-Version: 2.0.0
-Status: Production Ready
-Last Updated: 2024
-
-New Features in v2.0.0:
-- Interactive UI components (hover effects)
-- Full-width banner system
-- Internship filtering
-- Resume viewer fixes (mobile)
-- Internship comparison system (2-4 items)
-- Smart suggestions on detail pages
-- Improved card layouts and alignment
-- Context-based state management
-
-Previous Features:
+### 5. Performance Improvements (New)
+- **Startup Speed**: Implemented `expo-splash-screen` with `expo-asset` to pre-load heavy images, eliminating layout shifts.
+- **List Virtualization**: Refactored `InternshipScreen` and `CareerRecommendationScreen` to use `FlatList`.
+  - Enables smooth 60fps scrolling for large datasets.
+  - Implemented dynamic grid columns (1/2/3) for Career Recommendations.
+- **Memoization**: Optimized rendering with `useMemo` and `useCallback`.
+
+### 6. Mobile & Web Robustness
+- **Android Resume Security**: Implemented `FileSystem.getContentUriAsync` to safely convert `file://` paths to `content://` URIs, preventing `FileUriExposedException` crashes.
+- **Web Compatibility Enhancements**:
+  - `ResumeUploader`: Bypasses `expo-file-system` on Web, using Blob URIs instead.
+  - `ProfileScreen`: Fallback to `fetch` + `FileReader` for analyzing Web Blobs.
+  - **Self-Healing**: Added "Remove Now" recovery option for stale Web Blob URLs.
+
+### 7. Application Tracker Overhaul
+- **Isolated Data Source**: Tracker data moved to `users/${uid}/my_tracker_entries` to prevent legacy data conflicts.
+- **Sequential Status**: Logic to enforce correct status progression (Saved -> Applied -> Interview...).
+- **Funnel Analytics**: refactored `getStatusStats` for accurate funnel visualization.
+
+### 8. Web Application Flow
+- **Resume Analysis**: Optimized for Web using base64 checks to avoid re-downloading Blobs.
+- **Hover Effects**: Smoother CSS-like transitions using `InteractiveWrapper`.
+
+### 🔒 Security & Data Integrity
+- **Tracker Isolation**: `my_tracker_entries` node ensures purely explicit tracking interactions.
+- **Android File Sharing**: Strict compliance with Android N+ file sharing policies via Content URIs.
+
+### 🚀 Deployment Readiness (Updated)
+- **Web**: Validated `app.config.js` and `package.json`.
+- **Mobile**: Configured package names (`com.student.careerportal`) and secure file handling for Android store compliance.
+
+### 🔮 Future Enhancements
+- Push notifications
+- Resume builder (AI)
+- Interview preparation
+- Skill assessments
+- Leaderboards
+- Networking features
+- Comparison history/saved comparisons
+- Export comparison as PDF
+
+### 📞 Support & Maintenance
+- Firebase monitoring
+- Expo analytics
+- Regular updates & patches
+- File system cleanup for resume storage
+
+### 📱 Responsive Design
+- Mobile-first approach
+- Breakpoints:
+  - Mobile: < 768px
+  - Tablet: 768px - 1024px
+  - Desktop: > 1024px
+- Layouts:
+  - 1 column (mobile)
+  - 2 columns (tablet)
+  - 3 columns (desktop)
+- Touch targets: Minimum 44x44px
+- Safe area handling on iOS
+
+### 🌐 Deployment & Compatibility
+- Android, iOS, Web supported
+- All major browsers supported
+- Expo EAS for builds
+- Netlify / Vercel / Firebase for web hosting
+
+### 🔒 Security Checklist
+- API keys secured
+- Role-based access control
+- Input validation
+- HTTPS enforced
+- Firebase rules strict
+- File system permissions handled
+- Comparison data scoped to user session
+
+### 📝 Version Summary
+- **Version**: 2.1.0
+- **Status**: Production Ready & Optimized
+- **Last Updated**: December 2025
+
+**New Features in v2.1.0**:
+- **Performance**: Asset pre-loading, FlatList virtualization.
+- **Robustness**: Android secure file handling, Web resume self-healing.
+- **Tracker**: Isolated data source, improved status logic.
+- **UI**: Dynamic grids, smoother transitions.
+
+**Previous Features**:
 - AI Careers, Internships, ATS Scoring, Gamification
 - Authentication, Profile Management
-- Application Tracking, Analytics
+- Interactive UI components (hover effects)
+- Full-width banner system
+- Internship comparison system (2-4 items)
 
-Platforms: Android, iOS, Web
-
-📋 Component Reference
-
-New Components Added:
-1. InteractiveWrapper (src/components/InteractiveWrapper.js)
-   - Unified interaction wrapper for web/mobile
-   - Props: style, hoverStyle, pressedStyle, disabled, onPress, androidRippleColor
-
-2. HeaderBanner (src/components/HeaderBanner.js)
-   - Full-width banner with background image
-   - Props: image, title, subtitle, height, overlayOpacity, textColor
-
-3. FilterModal (src/components/FilterModal.js)
-   - Bottom sheet for internship filtering
-   - Props: visible, onClose, onApply, initial
-
-4. CompareToggle (src/components/CompareToggle.js)
-   - Toggle button for comparison selection
-   - Props: internship, size, style
-
-5. CompareBar (src/components/CompareBar.js)
-   - Sticky comparison bar
-   - Props: onComparePress
-
-6. SmartSuggestions (src/components/SmartSuggestions.js)
-   - AI-powered internship recommendations
-   - Props: currentInternship, allInternships, userSkills, onSelect
-
-7. ComparisonContext (src/context/ComparisonContext.js)
-   - Global state for comparison list
-   - Methods: addToCompare, removeFromCompare, clearCompare, isInComparison
-
-📐 Screen Updates
-
-HomeScreen
-- Added HeaderBanner with homepage.jpg
-- Hero layout with overlaid text
-
-CareerRecommendationScreen
-- Added HeaderBanner with careerrecommendation_header.webp
-- Fixed card alignment (badge top-right, favorite bottom-right)
-- Improved spacing and padding
-
-InternshipScreen
-- Added HeaderBanner with internship_header.jpeg
-- Added FilterModal integration
-- Added CompareToggle to each card
-- Added CompareBar at bottom
-- Enhanced filtering system
-
-ProfileScreen
-- Removed banner (per design decision)
-- Fixed resume viewer for mobile
-- Improved file handling
-
-InternshipDetailsScreen
-- Added SmartSuggestions component
-- Fetches all internships for suggestions
-- Loads user skills for matching
-
-ComparisonScreen (New)
-- Side-by-side comparison table
-- Horizontal scroll layout
-- Best value highlighting
-- Apply buttons
-
-🔧 Technical Improvements
-
-File System Integration
-- expo-file-system for reliable file access
-- Document directory storage for resumes
-- Proper URI handling (content://, file://, http://)
-
-State Management
-- React Context API for comparison state
-- Lightweight, no external dependencies
-- Session-based persistence
-
-Performance
-- Memoized suggestion calculations
-- Optimized re-renders
-- Efficient filtering algorithms
-
-Accessibility
-- Proper touch targets (44x44px minimum)
-- Screen reader support
-- Keyboard navigation (web)
-- Safe area handling (iOS)
-
-🎨 Design Patterns
-
-Component Composition
-- Reusable InteractiveWrapper
-- Consistent HeaderBanner usage
-- Modular FilterModal
-
-State Management Pattern
-- Context for global comparison state
-- Local state for UI interactions
-- Firebase for persistent data
-
-Responsive Design Pattern
-- useResponsive hook for breakpoints
-- Conditional styling based on platform
-- Mobile-first approach
+**Platforms**: Android, iOS, Web

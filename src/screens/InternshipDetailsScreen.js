@@ -18,6 +18,7 @@ import RealInternshipAPI from "../services/realInternshipAPI";
 import WebScrapingAPI from "../services/webScrapingAPI";
 import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue } from "firebase/database";
+import ScreenHeader from "../components/ScreenHeader";
 
 export default function InternshipDetailsScreen({ route, navigation }) {
   const { job } = route.params;
@@ -143,29 +144,27 @@ export default function InternshipDetailsScreen({ route, navigation }) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header with Back Navigation */}
-      <View style={styles.headerBar}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Internship Details</Text>
-        <TouchableOpacity style={styles.favoriteButton} onPress={toggleFavorite}>
-          <MaterialIcons 
-            name={isFavorited ? "favorite" : "favorite-border"} 
-            size={24} 
-            color={isFavorited ? "#D4AF37" : colors.white} 
-          />
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader
+        title="Internship Details"
+        showBackButton={true}
+        navigation={navigation}
+        rightAction={
+          <TouchableOpacity style={styles.favoriteButton} onPress={toggleFavorite}>
+            <MaterialIcons
+              name={isFavorited ? "favorite" : "favorite-border"}
+              size={24}
+              color={isFavorited ? "#D4AF37" : colors.white}
+            />
+          </TouchableOpacity>
+        }
+      />
 
       <View style={styles.content}>
         {/* Main Info */}
         <View style={styles.mainInfo}>
           <Text style={styles.title}>{job.title}</Text>
           <Text style={styles.company}>{job.company}</Text>
-          
+
           <View style={styles.metaContainer}>
             <View style={styles.metaItem}>
               <MaterialIcons name="location-on" size={16} color={colors.textLight} />
@@ -225,8 +224,8 @@ export default function InternshipDetailsScreen({ route, navigation }) {
         </View>
 
         {/* Track Application Button */}
-        <TouchableOpacity 
-          style={[styles.trackButton, isTracked && styles.trackButtonDisabled]} 
+        <TouchableOpacity
+          style={[styles.trackButton, isTracked && styles.trackButtonDisabled]}
           onPress={handleTrackApplication}
           disabled={isTracked}
         >
@@ -259,23 +258,6 @@ export default function InternshipDetailsScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     paddingBottom: 30,
-  },
-  headerBar: {
-    backgroundColor: "#2C3E3F",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginBottom: 20,
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: "700",
-    color: colors.white,
   },
   favoriteButton: {
     padding: 4,

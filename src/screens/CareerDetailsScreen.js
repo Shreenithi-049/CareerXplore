@@ -15,6 +15,7 @@ import { AIService } from "../services/aiService";
 import { auth, db } from "../services/firebaseConfig";
 import { ref, onValue, update } from "firebase/database";
 import { awardXP } from "../services/gamificationService";
+import ScreenHeader from "../components/ScreenHeader";
 
 export default function CareerDetailsScreen({ route, navigation }) {
   const { career, userSkills } = route.params;
@@ -33,7 +34,7 @@ export default function CareerDetailsScreen({ route, navigation }) {
     checkFavoriteStatus();
     loadUserProfile();
     awardXP("VIEW_CAREER");
-    
+
     // Track career views for badge
     const user = auth.currentUser;
     if (user) {
@@ -60,7 +61,7 @@ export default function CareerDetailsScreen({ route, navigation }) {
   const generateAIInsights = async () => {
     console.log("Generate button clicked");
     console.log("User Profile:", userProfile);
-    
+
     if (!userProfile) {
       Alert.alert("Error", "Please complete your profile first");
       return;
@@ -68,7 +69,7 @@ export default function CareerDetailsScreen({ route, navigation }) {
 
     console.log("Starting AI generation...");
     setLoadingAI(true);
-    
+
     try {
       const result = await AIService.generateCareerInsights(userProfile, career);
       console.log("AI Result:", result);
@@ -111,25 +112,23 @@ export default function CareerDetailsScreen({ route, navigation }) {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Header with Back Navigation */}
-      <View style={styles.headerBar}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={colors.white} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Career Details</Text>
-        <TouchableOpacity style={styles.favoriteButton} onPress={toggleFavorite}>
-          <MaterialIcons 
-            name={isFavorited ? "favorite" : "favorite-border"} 
-            size={24} 
-            color={isFavorited ? "#D4AF37" : colors.white} 
-          />
-        </TouchableOpacity>
-      </View>
-      {/* Header */}
-      <View style={styles.header}>
+      <ScreenHeader
+        title="Career Details"
+        showBackButton={true}
+        navigation={navigation}
+        rightAction={
+          <TouchableOpacity style={styles.favoriteButton} onPress={toggleFavorite}>
+            <MaterialIcons
+              name={isFavorited ? "favorite" : "favorite-border"}
+              size={24}
+              color={isFavorited ? "#D4AF37" : colors.white}
+            />
+          </TouchableOpacity>
+        }
+      />
+
+      {/* Career Title & Tags */}
+      <View style={styles.contentHeader}>
         <Text style={styles.title}>{career.title}</Text>
         <View style={styles.tagContainer}>
           {career.tags.map((tag, idx) => (
@@ -229,7 +228,7 @@ export default function CareerDetailsScreen({ route, navigation }) {
       </View>
 
       {/* Roadmap Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.roadmapButton}
         onPress={() => navigation.navigate("CareerRoadmap", { career, userSkills })}
       >
@@ -243,10 +242,10 @@ export default function CareerDetailsScreen({ route, navigation }) {
           <MaterialIcons name="auto-awesome" size={24} color="#9333EA" />
           <Text style={styles.aiTitle}>AI-Powered Career Insights</Text>
         </View>
-        
+
         {!aiInsights ? (
-          <TouchableOpacity 
-            style={styles.generateButton} 
+          <TouchableOpacity
+            style={styles.generateButton}
             onPress={generateAIInsights}
             disabled={loadingAI}
           >
@@ -297,8 +296,8 @@ export default function CareerDetailsScreen({ route, navigation }) {
               </View>
             )}
 
-            <TouchableOpacity 
-              style={styles.regenerateButton} 
+            <TouchableOpacity
+              style={styles.regenerateButton}
               onPress={generateAIInsights}
             >
               <MaterialIcons name="refresh" size={18} color="#9333EA" />
@@ -315,27 +314,7 @@ const styles = StyleSheet.create({
   container: {
     paddingBottom: 30,
   },
-  headerBar: {
-    backgroundColor: "#2C3E3F",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    marginBottom: 20,
-  },
-  backButton: {
-    marginRight: 16,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: "700",
-    color: colors.white,
-  },
-  favoriteButton: {
-    padding: 4,
-  },
-  header: {
+  contentHeader: {
     marginBottom: 20,
     paddingHorizontal: 20,
   },
@@ -518,32 +497,32 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     flex: 1,
   },
-roadmapButton: {
-  backgroundColor: colors.accent,
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "center",
-  paddingVertical: 16,
-  borderRadius: 12,
-  marginHorizontal: 20,
-  marginBottom: 20,
-  gap: 8,
-  elevation: 5,
-},
-roadmapButtonText: {
-  color: colors.white,
-  fontSize: 15,          // changed from 16 → 15
-  fontWeight: "600",     // changed from 700 → 600
-},
+  roadmapButton: {
+    backgroundColor: colors.accent,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    gap: 8,
+    elevation: 5,
+  },
+  roadmapButtonText: {
+    color: colors.white,
+    fontSize: 15,          // changed from 16 → 15
+    fontWeight: "600",     // changed from 700 → 600
+  },
 
   aiSection: {
-  marginTop: 10,
-  marginBottom: 20,
-  paddingVertical: 20,
-  backgroundColor: "#F5F3FF",
-  borderRadius: 12,
-  marginHorizontal: 20,
-},
+    marginTop: 10,
+    marginBottom: 20,
+    paddingVertical: 20,
+    backgroundColor: "#F5F3FF",
+    borderRadius: 12,
+    marginHorizontal: 20,
+  },
   aiHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -555,21 +534,21 @@ roadmapButtonText: {
     color: "#9333EA",
     marginLeft: 8,
   },
- generateButton: {
-  backgroundColor: "#9333EA",
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "center",
-  paddingVertical: 16,
-  borderRadius: 12,
-  marginHorizontal: 20,
-  gap: 8,
-},
-generateButtonText: {
-  color: colors.white,
-  fontSize: 15,          // matches roadmap button text
-  fontWeight: "600",
-},
+  generateButton: {
+    backgroundColor: "#9333EA",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginHorizontal: 20,
+    gap: 8,
+  },
+  generateButtonText: {
+    color: colors.white,
+    fontSize: 15,          // matches roadmap button text
+    fontWeight: "600",
+  },
 
   insightCard: {
     backgroundColor: colors.white,

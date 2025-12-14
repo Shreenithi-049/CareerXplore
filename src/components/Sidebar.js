@@ -8,6 +8,7 @@ import {
   Image,
   Platform,
   StatusBar,
+  ScrollView
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { auth } from "../services/firebaseConfig";
@@ -24,6 +25,7 @@ export default function Sidebar({ activePage, setActivePage, navigation, onClose
     { key: "Internships", label: "Internships", icon: "work" },
     { key: "Tracker", label: "App Tracker", icon: "track-changes" },
     { key: "Analytics", label: "Analytics", icon: "bar-chart" },
+    { key: "Help", label: "Help & Guide", icon: "help" },
     { key: "Profile", label: "Profile", icon: "person" },
   ];
 
@@ -64,7 +66,10 @@ export default function Sidebar({ activePage, setActivePage, navigation, onClose
       </View>
 
       {/* Menu Items */}
-      <View style={styles.menuContainer}>
+      <ScrollView
+        style={styles.menuContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {menuItems.map((item) => {
           const isActive = activePage === item.key;
           const isHovered = hovered === item.key;
@@ -80,9 +85,9 @@ export default function Sidebar({ activePage, setActivePage, navigation, onClose
               onPress={() => handleMenuPress(item.key)}
               {...(Platform.OS === "web"
                 ? {
-                    onMouseEnter: () => setHovered(item.key),
-                    onMouseLeave: () => setHovered(null),
-                  }
+                  onMouseEnter: () => setHovered(item.key),
+                  onMouseLeave: () => setHovered(null),
+                }
                 : {})}
             >
               <MaterialIcons
@@ -103,7 +108,7 @@ export default function Sidebar({ activePage, setActivePage, navigation, onClose
             </TouchableOpacity>
           );
         })}
-      </View>
+      </ScrollView>
 
       {/* Logout */}
       <TouchableOpacity style={styles.logoutItem} onPress={handleLogout}>
@@ -116,6 +121,7 @@ export default function Sidebar({ activePage, setActivePage, navigation, onClose
 
 const styles = StyleSheet.create({
   sidebar: {
+    flex: 1,
     width: 220,
     backgroundColor: "#2C3E3F",
     paddingTop: 26,
@@ -126,6 +132,7 @@ const styles = StyleSheet.create({
 
   sidebarMobile: {
     width: "100%",
+    height: "100%",
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight + 10 : 50,
     paddingHorizontal: 20,
     paddingBottom: 30,
@@ -175,7 +182,7 @@ const styles = StyleSheet.create({
   },
 
   menuContainer: {
-    flexGrow: 1,
+    flex: 1,
     marginTop: 10,
   },
 

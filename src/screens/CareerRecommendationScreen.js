@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useResponsive } from "../utils/useResponsive";
@@ -311,131 +312,130 @@ export default function CareerRecommendationScreen({
           showLogo={true}
         />
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
+        {/* FlatList with Dynamic Grid */}
+        <FlatList
+          key={isMobile ? 'one-col' : isTablet ? 'two-col' : 'three-col'}
+          data={filteredCareers}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={isMobile ? 1 : isTablet ? 2 : 3}
           contentContainerStyle={styles.scrollContent}
-        >
-          <HeaderBanner
-            image={require("../../assets/careerrecommendation_header.webp")}
-            title="Find roles that fit you"
-            subtitle="Curated matches based on your skills. Explore categories and your favorites."
-            height={isMobile ? 200 : 260}
-            overlayOpacity={0.25}
-          />
-
-          {!profileComplete && (
-            <ProfileNotification
-              onNavigateToProfile={() => setActivePage && setActivePage("Profile")}
-            />
-          )}
-
-          <View style={styles.topRow}>
-            <TextInput
-              style={[styles.searchInput, isMobile && styles.searchInputMobile]}
-              placeholder="Search career role"
-              placeholderTextColor={colors.textLight}
-              value={search}
-              onChangeText={setSearch}
-            />
-          </View>
-
-          {/* Category Chips */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.chipRow}
-            contentContainerStyle={styles.chipContent}
-          >
-            {CATEGORIES.map((cat) => (
-              <InteractiveWrapper
-                key={cat}
-                style={[
-                  styles.chip,
-                  isMobile && styles.chipMobile,
-                  activeCategory === cat && styles.chipActive,
-                ]}
-                onPress={() => setActiveCategory(cat)}
-              >
-                <Text
-                  style={[
-                    styles.chipText,
-                    activeCategory === cat && styles.chipTextActive,
-                  ]}
-                >
-                  {cat}
+          columnWrapperStyle={(!isMobile && { gap: 16, marginBottom: 16 }) || null} // Gap for grid rows
+          renderItem={({ item }) => (
+            <InteractiveWrapper
+              onPress={() => openDetails(item)}
+              style={[
+                styles.card,
+                // Width is handled by Flex in grid, but for FlatList column we ensure flex:1
+                isMobile ? styles.cardMobile : { flex: 1 },
+                hoveredId === item.id && styles.cardHovered,
+              ]}
+              {...(isWeb && {
+                onMouseEnter: () => setHoveredId(item.id),
+                onMouseLeave: () => setHoveredId(null),
+              })}
+            >
+              {/* Match Badge - Top Right */}
+              <View style={styles.matchBadge}>
+                <Text style={styles.matchBadgeValue}>
+                  {(item.matchRatio * 100).toFixed(0)}%
                 </Text>
+                <Text style={styles.matchBadgeLabel}>match</Text>
+              </View>
+
+              {/* Content Section */}
+              <View style={styles.cardContent}>
+                <Text style={styles.cardTitle}>{item.title}</Text>
+                <Text style={styles.cardTags}>{(item.tags || []).join("   ")}</Text>
+                <Text style={styles.cardMatch}>
+                  Matched skills: {item.matchCount}
+                </Text>
+              </View>
+
+              {/* Favorite Icon - Bottom Right */}
+              <InteractiveWrapper
+                style={styles.favoriteIcon}
+                onPress={(e) => toggleFavorite(e, item)}
+                androidRippleColor={colors.accent + "33"}
+                hitSlop={8}
+              >
+                <MaterialIcons
+                  name={
+                    favoritedCareers.includes(item.id)
+                      ? "favorite"
+                      : "favorite-border"
+                  }
+                  size={20}
+                  color={
+                    favoritedCareers.includes(item.id)
+                      ? "#D4AF37"
+                      : colors.textLight
+                  }
+                />
               </InteractiveWrapper>
-            ))}
-          </ScrollView>
+            </InteractiveWrapper>
+          )}
+          ListHeaderComponent={
+            <>
+              <HeaderBanner
+                image={require("../../assets/careerrecommendation_header.webp")}
+                title="Find roles that fit you"
+                subtitle="Curated matches based on your skills. Explore categories and your favorites."
+                height={isMobile ? 200 : 260}
+                overlayOpacity={0.25}
+              />
 
-          {/* Career Cards */}
-          <View style={styles.listScroll}>
-            {filteredCareers.length === 0 ? (
-              <Text style={styles.emptyText}>No matched careers yet.</Text>
-            ) : (
-              <View style={styles.grid}>
-                {filteredCareers.map((career) => (
+              {!profileComplete && (
+                <ProfileNotification
+                  onNavigateToProfile={() => setActivePage && setActivePage("Profile")}
+                />
+              )}
+
+              <View style={styles.topRow}>
+                <TextInput
+                  style={[styles.searchInput, isMobile && styles.searchInputMobile]}
+                  placeholder="Search career role"
+                  placeholderTextColor={colors.textLight}
+                  value={search}
+                  onChangeText={setSearch}
+                />
+              </View>
+
+              {/* Category Chips */}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.chipRow}
+                contentContainerStyle={styles.chipContent}
+              >
+                {CATEGORIES.map((cat) => (
                   <InteractiveWrapper
-                    key={career.id}
-                    onPress={() => openDetails(career)}
+                    key={cat}
                     style={[
-                      styles.card,
-                      isMobile
-                        ? styles.cardMobile
-                        : isTablet
-                        ? styles.cardTablet
-                        : styles.cardDesktop,
-                      hoveredId === career.id && styles.cardHovered,
+                      styles.chip,
+                      isMobile && styles.chipMobile,
+                      activeCategory === cat && styles.chipActive,
                     ]}
-                    {...(isWeb && {
-                      onMouseEnter: () => setHoveredId(career.id),
-                      onMouseLeave: () => setHoveredId(null),
-                    })}
+                    onPress={() => setActiveCategory(cat)}
                   >
-                    {/* Match Badge - Top Right */}
-                    <View style={styles.matchBadge}>
-                      <Text style={styles.matchBadgeValue}>
-                        {(career.matchRatio * 100).toFixed(0)}%
-                      </Text>
-                      <Text style={styles.matchBadgeLabel}>match</Text>
-                    </View>
-
-                    {/* Content Section */}
-                    <View style={styles.cardContent}>
-                      <Text style={styles.cardTitle}>{career.title}</Text>
-                      <Text style={styles.cardTags}>{(career.tags || []).join("   ")}</Text>
-                      <Text style={styles.cardMatch}>
-                        Matched skills: {career.matchCount}
-                      </Text>
-                    </View>
-
-                    {/* Favorite Icon - Bottom Right */}
-                    <InteractiveWrapper
-                      style={styles.favoriteIcon}
-                      onPress={(e) => toggleFavorite(e, career)}
-                      androidRippleColor={colors.accent + "33"}
-                      hitSlop={8}
+                    <Text
+                      style={[
+                        styles.chipText,
+                        activeCategory === cat && styles.chipTextActive,
+                      ]}
                     >
-                      <MaterialIcons
-                        name={
-                          favoritedCareers.includes(career.id)
-                            ? "favorite"
-                            : "favorite-border"
-                        }
-                        size={20}
-                        color={
-                          favoritedCareers.includes(career.id)
-                            ? "#D4AF37"
-                            : colors.textLight
-                        }
-                      />
-                    </InteractiveWrapper>
+                      {cat}
+                    </Text>
                   </InteractiveWrapper>
                 ))}
-              </View>
-            )}
-          </View>
-        </ScrollView>
+              </ScrollView>
+            </>
+          }
+          ListEmptyComponent={
+            <Text style={styles.emptyText}>No matched careers yet.</Text>
+          }
+          // For mobile, we just add margin bottom directly to card or simple separator
+          ItemSeparatorComponent={isMobile ? () => <View style={{ height: 16 }} /> : null}
+        />
       </View>
     </SafeAreaView>
   );
@@ -533,7 +533,8 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
+    gap: 16,
   },
 
   // ---------- CARD STYLES WITH TRANSITION ----------
@@ -551,7 +552,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     elevation: 4,
     position: "relative",
-    marginBottom: 16,
+    // marginBottom: 16, // Handled by gap
     minHeight: 140, // Ensure consistent card height
 
     // ⭐ Smooth hover animation for Web
@@ -568,10 +569,10 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
   },
   cardTablet: {
-    width: "48%",
+    width: "48%", // Gap handles spacing
   },
   cardDesktop: {
-    width: "32%",
+    width: "31%", // 3 cards per row fit with gap
   },
 
   cardHovered: {

@@ -9,7 +9,7 @@ import colors from '../theme/colors';
 
 const CircularProgress = ({ percentage, size = 100, color = colors.accent }) => {
   return (
-    <View style={{ width: size, height: size, borderRadius: size/2, backgroundColor: colors.grayLight, justifyContent: 'center', alignItems: 'center', borderWidth: 8, borderColor: color }}>
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.grayLight, justifyContent: 'center', alignItems: 'center', borderWidth: 8, borderColor: color }}>
       <Text style={{ fontSize: 24, fontWeight: '700', color: color }}>{percentage}%</Text>
     </View>
   );
@@ -45,8 +45,8 @@ export default function AnalyticsScreen({ showHamburger, onToggleSidebar }) {
 
   return (
     <View style={[styles.container, isMobile && styles.containerMobile]}>
-      <ScreenHeader 
-        title="Analytics" 
+      <ScreenHeader
+        title="Analytics"
         subtitle="Track your progress"
         showHamburger={showHamburger}
         onToggleSidebar={onToggleSidebar}
@@ -54,64 +54,64 @@ export default function AnalyticsScreen({ showHamburger, onToggleSidebar }) {
       />
       <ScrollView style={styles.content}>
         <Animated.View style={{ opacity: fadeAnim }}>
-        {/* Stats Grid */}
-        <View style={[styles.statsGrid, isMobile && styles.statsGridMobile]}>
-          <View style={styles.statBox}>
-            <View style={styles.iconContainer}>
-              <MaterialIcons name="bolt" size={28} color={colors.accent} />
+          {/* Stats Grid */}
+          <View style={[styles.statsGrid, isMobile && styles.statsGridMobile]}>
+            <View style={styles.statBox}>
+              <View style={styles.iconContainer}>
+                <MaterialIcons name="bolt" size={28} color={colors.accent} />
+              </View>
+              <Text style={styles.statNumber}>{weeklyXP}</Text>
+              <Text style={styles.statLabel}>Total XP</Text>
             </View>
-            <Text style={styles.statNumber}>{weeklyXP}</Text>
-            <Text style={styles.statLabel}>Total XP</Text>
-          </View>
-          
-          <View style={styles.statBox}>
-            <View style={[styles.iconContainer, { backgroundColor: '#E3F2FD' }]}>
-              <MaterialIcons name="visibility" size={28} color="#2196F3" />
-            </View>
-            <Text style={styles.statNumber}>{careerViews}</Text>
-            <Text style={styles.statLabel}>Career Views</Text>
-          </View>
-          
-          <View style={styles.statBox}>
-            <View style={[styles.iconContainer, { backgroundColor: '#E8F5E9' }]}>
-              <MaterialIcons name="work" size={28} color="#4CAF50" />
-            </View>
-            <Text style={styles.statNumber}>{applications}</Text>
-            <Text style={styles.statLabel}>Applications</Text>
-          </View>
-        </View>
 
-        {/* Circular Progress Cards */}
-        <View style={styles.progressSection}>
-          <Text style={styles.sectionTitle}>Your Progress</Text>
-          
-          <View style={styles.circularCard}>
-            <CircularProgress percentage={Math.round(xpProgress)} color={colors.accent} />
-            <View style={styles.circularInfo}>
-              <Text style={styles.circularTitle}>XP Growth</Text>
-              <Text style={styles.circularSubtitle}>{weeklyXP} / 500 XP</Text>
-              <Text style={styles.circularDescription}>Keep earning XP to level up!</Text>
+            <View style={styles.statBox}>
+              <View style={[styles.iconContainer, { backgroundColor: '#E3F2FD' }]}>
+                <MaterialIcons name="visibility" size={28} color="#2196F3" />
+              </View>
+              <Text style={styles.statNumber}>{careerViews}</Text>
+              <Text style={styles.statLabel}>Career Views</Text>
+            </View>
+
+            <View style={styles.statBox}>
+              <View style={[styles.iconContainer, { backgroundColor: '#E8F5E9' }]}>
+                <MaterialIcons name="work" size={28} color="#4CAF50" />
+              </View>
+              <Text style={styles.statNumber}>{applications}</Text>
+              <Text style={styles.statLabel}>Applications</Text>
             </View>
           </View>
 
-          <View style={styles.circularCard}>
-            <CircularProgress percentage={Math.round(careerProgress)} color="#2196F3" />
-            <View style={styles.circularInfo}>
-              <Text style={styles.circularTitle}>Career Exploration</Text>
-              <Text style={styles.circularSubtitle}>{careerViews} / 20 careers</Text>
-              <Text style={styles.circularDescription}>Explore more to find your perfect match</Text>
-            </View>
-          </View>
+          {/* Circular Progress Cards */}
+          <View style={styles.progressSection}>
+            <Text style={styles.sectionTitle}>Your Progress</Text>
 
-          <View style={styles.circularCard}>
-            <CircularProgress percentage={Math.round(appProgress)} color="#4CAF50" />
-            <View style={styles.circularInfo}>
-              <Text style={styles.circularTitle}>Application Activity</Text>
-              <Text style={styles.circularSubtitle}>{applications} / 10 applications</Text>
-              <Text style={styles.circularDescription}>Great progress on your job search!</Text>
+            <View style={styles.circularCard}>
+              <CircularProgress percentage={Math.round(xpProgress)} color={colors.accent} />
+              <View style={styles.circularInfo}>
+                <Text style={styles.circularTitle}>XP Growth</Text>
+                <Text style={styles.circularSubtitle}>{weeklyXP} / 500 XP</Text>
+                <Text style={styles.circularDescription}>Keep earning XP to level up!</Text>
+              </View>
+            </View>
+
+            <View style={styles.circularCard}>
+              <CircularProgress percentage={Math.round(careerProgress)} color="#2196F3" />
+              <View style={styles.circularInfo}>
+                <Text style={styles.circularTitle}>Career Exploration</Text>
+                <Text style={styles.circularSubtitle}>{careerViews} / 20 careers</Text>
+                <Text style={styles.circularDescription}>Explore more to find your perfect match</Text>
+              </View>
+            </View>
+
+            <View style={styles.circularCard}>
+              <CircularProgress percentage={Math.round(appProgress)} color="#4CAF50" />
+              <View style={styles.circularInfo}>
+                <Text style={styles.circularTitle}>Application Activity</Text>
+                <Text style={styles.circularSubtitle}>{applications} / 10 applications</Text>
+                <Text style={styles.circularDescription}>Great progress on your job search!</Text>
+              </View>
             </View>
           </View>
-        </View>
         </Animated.View>
       </ScrollView>
     </View>
@@ -134,10 +134,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
     marginBottom: 24,
-    justifyContent: 'space-between',
+    justifyContent: 'center', // Center aligned as requested
   },
   statsGridMobile: {
-    flexDirection: 'column',
+    // Mobile specific adjustments if needed, but flex-wrap row works well for centering
   },
   statBox: {
     flex: 1,

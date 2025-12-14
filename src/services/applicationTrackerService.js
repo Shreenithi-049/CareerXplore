@@ -8,9 +8,15 @@ const ApplicationTrackerService = {
     if (!user) return { success: false, message: "User not authenticated" };
 
     try {
-      const applicationsRef = ref(db, `users/${user.uid}/applications`);
+      // strict duplicate check
+      const isAlreadyTracked = await ApplicationTrackerService.isInternshipTracked(internship.id);
+      if (isAlreadyTracked) {
+        return { success: false, message: "This internship is already being tracked" };
+      }
+
+      const applicationsRef = ref(db, `users/${user.uid}/my_tracker_entries`);
       const newAppRef = push(applicationsRef);
-      
+
       await set(newAppRef, {
         id: newAppRef.key,
         internshipId: internship.id,
@@ -31,7 +37,7 @@ const ApplicationTrackerService = {
         deadline: null,
         documents: []
       });
-      
+
       return { success: true, id: newAppRef.key };
     } catch (error) {
       return { success: false, message: error.message };
@@ -44,9 +50,9 @@ const ApplicationTrackerService = {
     if (!user) return { success: false, message: "User not authenticated" };
 
     try {
-      const appRef = ref(db, `users/${user.uid}/applications/${applicationId}`);
+      const appRef = ref(db, `users/${user.uid}/my_tracker_entries/${applicationId}`);
       const snapshot = await get(appRef);
-      
+
       if (!snapshot.exists()) {
         return { success: false, message: "Application not found" };
       }
@@ -89,9 +95,9 @@ const ApplicationTrackerService = {
     if (!user) return { success: false, message: "User not authenticated" };
 
     try {
-      const appRef = ref(db, `users/${user.uid}/applications/${applicationId}`);
+      const appRef = ref(db, `users/${user.uid}/my_tracker_entries/${applicationId}`);
       const snapshot = await get(appRef);
-      
+
       if (!snapshot.exists()) {
         return { success: false, message: "Application not found" };
       }
@@ -115,9 +121,9 @@ const ApplicationTrackerService = {
     if (!user) return { success: false, message: "User not authenticated" };
 
     try {
-      const appRef = ref(db, `users/${user.uid}/applications/${applicationId}`);
+      const appRef = ref(db, `users/${user.uid}/my_tracker_entries/${applicationId}`);
       const snapshot = await get(appRef);
-      
+
       if (!snapshot.exists()) {
         return { success: false, message: "Application not found" };
       }
@@ -141,9 +147,9 @@ const ApplicationTrackerService = {
     if (!user) return { success: false, message: "User not authenticated" };
 
     try {
-      const appRef = ref(db, `users/${user.uid}/applications/${applicationId}`);
+      const appRef = ref(db, `users/${user.uid}/my_tracker_entries/${applicationId}`);
       const snapshot = await get(appRef);
-      
+
       if (!snapshot.exists()) {
         return { success: false, message: "Application not found" };
       }
@@ -175,7 +181,7 @@ const ApplicationTrackerService = {
     if (!user) return { success: false, message: "User not authenticated" };
 
     try {
-      const appRef = ref(db, `users/${user.uid}/applications/${applicationId}`);
+      const appRef = ref(db, `users/${user.uid}/my_tracker_entries/${applicationId}`);
       await remove(appRef);
       return { success: true };
     } catch (error) {
@@ -186,9 +192,9 @@ const ApplicationTrackerService = {
   // Listen to all applications
   listenToApplications: (callback) => {
     const user = auth.currentUser;
-    if (!user) return () => {};
+    if (!user) return () => { };
 
-    const applicationsRef = ref(db, `users/${user.uid}/applications`);
+    const applicationsRef = ref(db, `users/${user.uid}/my_tracker_entries`);
     return onValue(applicationsRef, (snapshot) => {
       const data = snapshot.val();
       const applications = data ? Object.values(data) : [];
@@ -202,9 +208,9 @@ const ApplicationTrackerService = {
     if (!user) return false;
 
     try {
-      const applicationsRef = ref(db, `users/${user.uid}/applications`);
+      const applicationsRef = ref(db, `users/${user.uid}/my_tracker_entries`);
       const snapshot = await get(applicationsRef);
-      
+
       if (!snapshot.exists()) return false;
 
       const applications = Object.values(snapshot.val());

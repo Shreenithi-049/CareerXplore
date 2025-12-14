@@ -10,8 +10,8 @@ export default function DailyXPCard({ dailyXP = 0, motivationalText }) {
         <MaterialIcons name="bolt" size={32} color={colors.accent} />
       </View>
       <View style={styles.content}>
-        <Text style={styles.label}>Today's XP</Text>
-        <Text style={styles.xpValue}>+{dailyXP} XP</Text>
+        <Text style={styles.label}>Total XP Earned</Text>
+        <Text style={styles.xpValue}>{dailyXP} XP</Text>
         {motivationalText && <Text style={styles.motivation}>{motivationalText}</Text>}
       </View>
     </View>

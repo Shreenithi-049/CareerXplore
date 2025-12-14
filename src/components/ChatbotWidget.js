@@ -4,6 +4,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../theme/colors';
 import Constants from 'expo-constants';
 
+import { useComparison } from '../context/ComparisonContext';
+
 const API_KEY = Constants.expoConfig?.extra?.GEMINI_API_KEY;
 
 export default function ChatbotWidget() {
@@ -14,6 +16,10 @@ export default function ChatbotWidget() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const pulseAnim = useRef(new Animated.Value(1)).current;
+
+  // Hook to detect if CompareBar is visible
+  const { comparisonList } = useComparison();
+  const bottomOffset = comparisonList.length >= 2 ? 90 : 20;
 
   useEffect(() => {
     const pulse = Animated.loop(
@@ -43,7 +49,24 @@ export default function ChatbotWidget() {
     setLoading(true);
 
     try {
-      const prompt = `You are a helpful career guidance assistant for CareerXplore app. Answer this question concisely in 2-3 sentences:\n\n${input}`;
+      // Enhanced System Prompt for App Guidance
+      const systemPrompt = `You are the intelligent guide for CareerXplore, a career development app.
+      
+      APP FEATURES:
+      1. **Home**: Dashboard with daily XP, gamification progress, and quick access.
+      2. **Career Recommendations**: Personalized career paths based on your skills.
+      3. **Internships**: Aggregates internships from multiple sources (mock, real APIs, scraped). You can compare them.
+      4. **Application Tracker**: Manually track your job applications (saved, applied, interviewing, etc.). Note: It's a manual organizer, not an auto-applier.
+      5. **Profile**: Manage your skills, education, and upload your resume for analysis.
+      6. **Analytics**: Visual graphs of your progress and activity.
+      
+      YOUR ROLE:
+      - Answer questions about navigation ("Where do I find internships?").
+      - Explain features ("How does the XP system work?").
+      - Provide general career advice ("How do I improve my resume?").
+      - Be concise (2-3 sentences max) and encouraging.
+      
+      USER QUESTION: ${input}`;
 
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`,
@@ -51,14 +74,14 @@ export default function ChatbotWidget() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }]
+            contents: [{ parts: [{ text: systemPrompt }] }]
           })
         }
       );
 
       const data = await response.json();
       const botText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Sorry, I couldn\'t process that.';
-      
+
       setMessages(prev => [...prev, { role: 'bot', text: botText }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'bot', text: 'Sorry, something went wrong. Please try again.' }]);
@@ -69,8 +92,8 @@ export default function ChatbotWidget() {
 
   return (
     <>
-      <Animated.View style={[styles.fabGlow, { transform: [{ scale: pulseAnim }] }]} />
-      <TouchableOpacity style={styles.fab} onPress={() => setIsOpen(true)}>
+      <Animated.View style={[styles.fabGlow, { transform: [{ scale: pulseAnim }], bottom: bottomOffset }]} />
+      <TouchableOpacity style={[styles.fab, { bottom: bottomOffset }]} onPress={() => setIsOpen(true)}>
         <MaterialIcons name="chat" size={24} color="#fff" />
       </TouchableOpacity>
 

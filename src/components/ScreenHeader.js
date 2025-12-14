@@ -1,30 +1,62 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Image, Platform } from "react-native";
+import { View, Text, StyleSheet, Image, Platform, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import colors from "../theme/colors";
 import InteractiveWrapper from "./InteractiveWrapper";
+import { useNavigation } from "@react-navigation/native";
 
-export default function ScreenHeader({ title, subtitle, showHamburger, onToggleSidebar, showLogo = false }) {
+export default function ScreenHeader({
+  title,
+  subtitle,
+  showHamburger,
+  onToggleSidebar,
+  showLogo = false,
+  showBackButton = false,
+  onBack,
+  rightAction
+}) {
   const [hover, setHover] = useState(false);
+  const navigation = useNavigation();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      navigation.goBack();
+    }
+  };
 
   return (
     <View style={styles.header}>
       <View style={styles.headerContent}>
 
-        {showHamburger && (
+        {showBackButton ? (
           <InteractiveWrapper
-            style={[styles.hamburger, hover && styles.hamburgerHover]}
+            style={[styles.iconButton, hover && styles.iconButtonHover]}
+            onPress={handleBack}
+            {...(Platform.OS === "web"
+              ? {
+                onMouseEnter: () => setHover(true),
+                onMouseLeave: () => setHover(false),
+              }
+              : {})}
+          >
+            <MaterialIcons name="arrow-back" size={24} color={colors.white} />
+          </InteractiveWrapper>
+        ) : showHamburger ? (
+          <InteractiveWrapper
+            style={[styles.iconButton, hover && styles.iconButtonHover]}
             onPress={onToggleSidebar}
             {...(Platform.OS === "web"
               ? {
-                  onMouseEnter: () => setHover(true),
-                  onMouseLeave: () => setHover(false),
-                }
+                onMouseEnter: () => setHover(true),
+                onMouseLeave: () => setHover(false),
+              }
               : {})}
           >
             <MaterialIcons name="menu" size={24} color={colors.white} />
           </InteractiveWrapper>
-        )}
+        ) : null}
 
         {showLogo && (
           <Image
@@ -35,9 +67,15 @@ export default function ScreenHeader({ title, subtitle, showHamburger, onToggleS
         )}
 
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>{title}</Text>
-          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+          <Text style={styles.title} numberOfLines={1}>{title}</Text>
+          {subtitle && <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text>}
         </View>
+
+        {rightAction && (
+          <View style={styles.rightAction}>
+            {rightAction}
+          </View>
+        )}
       </View>
     </View>
   );
@@ -51,6 +89,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomLeftRadius: 14,
     borderBottomRightRadius: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+    minHeight: 80,
+    justifyContent: 'center',
   },
 
   headerContent: {
@@ -58,8 +103,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  /* Hamburger button */
-  hamburger: {
+  /* Icon button (Hamburger / Back) */
+  iconButton: {
     marginRight: 16,
     padding: 8,
     borderRadius: 8,
@@ -72,7 +117,7 @@ const styles = StyleSheet.create({
   },
 
   /* Hover Effect */
-  hamburgerHover: Platform.select({
+  iconButtonHover: Platform.select({
     web: {
       backgroundColor: "rgba(200,169,81,0.25)",
       transform: "scale(1.1)",
@@ -82,24 +127,30 @@ const styles = StyleSheet.create({
   }),
 
   headerLogo: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     marginRight: 12,
   },
 
   titleContainer: {
     flex: 1,
+    justifyContent: 'center',
   },
 
   title: {
-    fontSize: 24,
+    fontSize: 22, // Adjusted for consistency
     fontWeight: "700",
     color: colors.accent,
-    marginBottom: 4,
+    marginBottom: 2,
   },
 
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: "#F5F1E8",
+    opacity: 0.9,
   },
+
+  rightAction: {
+    marginLeft: 10,
+  }
 });
